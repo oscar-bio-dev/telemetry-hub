@@ -655,7 +655,7 @@ pub struct TelemetryPayloadPb {
 }
 
 /// DTO Protobuf para ACK transmitido por el Gateway hacia el Nodo.
-#[derive(Clone, PartialEq, prost::Message)]
+#[derive(Clone, PartialEq, Eq, prost::Message)]
 pub struct GatewayAckPb {
     #[prost(enumeration = "Command", optional, tag = "1")]
     pub command: Option<i32>,
@@ -664,7 +664,7 @@ pub struct GatewayAckPb {
 }
 
 /// DTO Protobuf para reporte de autodiagnóstico activo emitido por el nodo.
-#[derive(Clone, PartialEq, prost::Message)]
+#[derive(Clone, PartialEq, Eq, prost::Message)]
 pub struct DiagnosticReportPb {
     #[prost(uint32, optional, tag = "1")]
     pub system_error_bitmask: Option<u32>,
