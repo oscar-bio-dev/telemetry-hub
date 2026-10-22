@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 > **Hi, I'm Oscar Mora 👋** <br/>
-> *Conservation Technologist | Embedded Systems Engineer | Founder of SetaeSense*
+> *Conservation Technologist | Embedded Systems Engineer | Founder of EcoWest Instrument*
 >
 > I bridge the gap between biological complexity and bare-metal hardware, translating deep ecological requirements into ultra-low-power IoT sensors and Edge AI solutions for environmental monitoring. Based in Pueblo West, Colorado, I focus on building robust, resilient instrumentation that survives extreme field conditions.
 
@@ -79,7 +79,7 @@ The backend supports the following sensor data from the unified Mega-Schema:
 ---
 
 ## 🔭 Current Focus & Other Projects
-- 🌍 **SetaeSense:** Designing custom environmental monitoring hardware and telemetry systems for soil and water ecology.
+- 🌍 **EcoWest Instrument:** Designing custom environmental monitoring hardware and telemetry systems for soil and water ecology.
 - 🪱 **Ecological Research:** Leading applied earthworm biodiversity and soil taxonomy studies, integrating physical sampling with precision edaphic modeling.
 - ⚙️ **Bare-Metal Engineering:** Developing high-performance, statically typed telemetry platforms from scratch using **Pure Rust** and **Embedded C/C++**.
 - 🛠️ **Hardware:** Texas Instruments, Microchip Technology, Analog Devices, RP2350, Espressif (ESP32), STMicroelectronics (STM32).

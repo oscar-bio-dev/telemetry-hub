@@ -1,4 +1,4 @@
-name: SetaeSense Industrial CI
+name: EcoWest Instrument Industrial CI
 
 on:
   push:

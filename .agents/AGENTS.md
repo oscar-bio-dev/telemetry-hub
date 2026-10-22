@@ -136,5 +136,5 @@ These must ALL pass before merge is allowed:
 - 🔴 **Issue Tracking**: All work must be tracked through an Issue or documented task. Use consistent labels (`bug`, `feature`, `documentation`, `security`, `priority:high`).
 - 🔴 **Documentation Sync**: `README.md`, `docs/ROADMAP.md`, `CHANGELOG.md`, and architecture docs must be kept strictly synchronized with the shipped code state.
 - 🔴 **Releases**: Follow Semantic Versioning (SemVer), tag releases explicitly, and document breaking changes, fixes, and features concisely in `CHANGELOG.md`.
-- 🔴 **Proprietary IP**: Ensure every newly created source code file (`.rs`) contains the official SetaeSense copyright and confidentiality header.
+- 🔴 **Proprietary IP**: Ensure every newly created source code file (`.rs`) contains the official EcoWest Instrument copyright and confidentiality header.
 - 🟡 **Stale PR Hygiene**: PRs with no activity for 14 days should be pinged. PRs with no activity for 30 days should be closed with a summary comment.

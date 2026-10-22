@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Oscar Mora / SetaeSense. All rights reserved.
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 
 // Architectural exception: Leptos heavily relies on wildcard imports for reactivity and macros,
 // and `view!` macros often exceed 100 lines for complex HTML structures.

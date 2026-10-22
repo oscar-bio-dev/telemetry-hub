@@ -1,4 +1,4 @@
-Copyright (c) 2026 Oscar Mora / SetaeSense. All Rights Reserved.
+Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All Rights Reserved.
 
 Queda estrictamente prohibida la copia, distribución, modificación o uso comercial de este código fuente sin autorización previa y por escrito.
 

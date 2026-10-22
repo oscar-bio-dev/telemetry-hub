@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Oscar Mora / SetaeSense. All rights reserved.
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 
 use futures::StreamExt;
 use gloo_net::websocket::{futures::WebSocket, Message};

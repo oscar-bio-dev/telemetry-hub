@@ -43,4 +43,4 @@ Before opening a Pull Request, you MUST ensure the following checks pass locally
 - **Hybrid f32/f64:** Protobuf DTOs use `f32` (hardware wire type). Domain models and DB use `f64` for analytical precision.
 - **No Unsafe:** Unless absolutely necessary and heavily documented.
 - **No Panics:** All `.unwrap()` and `.expect()` calls are prohibited in production code. Use `Result<>` propagation.
-- **Copyright Header:** Every `.rs` file must contain the SetaeSense copyright and confidentiality header.
+- **Copyright Header:** Every `.rs` file must contain the EcoWest Instrument copyright and confidentiality header.

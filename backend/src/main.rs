@@ -9,7 +9,7 @@
     unused
 )]
 #![allow(clippy::needless_for_each)]
-// Copyright (c) 2026 Oscar Mora / SetaeSense. All rights reserved.
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 //
 // This file is part of the oscar-bio-dev platform.
 // Unauthorized copying of this file, via any medium, is strictly prohibited.

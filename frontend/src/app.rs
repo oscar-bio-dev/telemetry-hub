@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Oscar Mora / SetaeSense. All rights reserved.
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 
 use crate::components::chatbot::Chatbot;
 use crate::pages::home::Home;

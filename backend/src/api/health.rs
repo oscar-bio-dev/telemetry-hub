@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Oscar Mora / SetaeSense. All rights reserved.
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 // Proprietary and confidential.
 
 //! Endpoints para Kubernetes Probes (Liveness & Readiness)
