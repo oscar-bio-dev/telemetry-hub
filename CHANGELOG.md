@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Canonical Protobuf Mega-Schema Expansion (Fields 1..33)**: Fully synchronized with `edge-telemetry-gateway` and `room-monitoring` v0.11.0:
+  - Added BSEC virtual sensors: `eco2`, `bvoc`, `tvoc`, and `is_calibrating`.
+  - Added BMV080 numerical concentration counts: `pm1_0_count`, `pm2_5_count`, `pm10_0_count` (#/m³).
+  - Added laser physical diagnostics: `is_laser_obstructed`, `is_pm_out_of_range`, `laser_runtime`.
+  - Added passive hardware error bitmask: `system_error_bitmask`.
+  - Added canonical enums and messages: `NodeStatus`, `Command`, `GatewayAckPb`, `DiagnosticReportPb`.
+- **Time-Sync Fallback**: Automatic detection of `measured_at_ms == 0` (uninitialized RTC or dead backup battery) falling back to `ingested_at_ms` or `Utc::now()` to prevent timestamp corruption (1970-01-01).
+- **DLQ Operability & Observability**: Exposed `GET /api/dlq/recent` endpoint in Axum and created the "Terminal de Alertas Críticas" in the Leptos HMI for real-time Poison Pill inspection.
+- **Zero-Trust JWT Middleware**: Dual extraction (`Authorization: Bearer` and `?token=`) protecting WebSockets and digital twin routes.
+
 ## [0.8.0] - 2026-09-05
 
 ### Added

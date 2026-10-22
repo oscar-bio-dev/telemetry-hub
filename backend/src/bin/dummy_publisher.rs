@@ -47,6 +47,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             pm10_0: Some(15.0),
             battery_mv: Some(4100),
             sleep_cycles: Some(10),
+            is_calibrating: Some(false),
+            eco2: Some(450.0),
+            bvoc: Some(0.2),
+            tvoc: Some(25.0),
+            pm1_0_count: Some(100.0),
+            pm2_5_count: Some(45.0),
+            pm10_0_count: Some(12.0),
+            is_laser_obstructed: Some(false),
+            is_pm_out_of_range: Some(false),
+            laser_runtime: Some(10.5),
+            system_error_bitmask: Some(0),
+            status: Some(shared::NodeStatus::Monitoring as i32),
         };
 
         let mut buf = Vec::new();

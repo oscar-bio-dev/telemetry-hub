@@ -55,7 +55,7 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **Distroless Containerization:** Creation of ultra-lightweight Docker images (`scratch`, < 15MB) shielded against OS-level vulnerabilities.
 - [x] **Cloud-Native Decoupling (Pub/Sub):** Replaced direct Axum mTLS endpoints with a native GCP Pub/Sub Pull Subscriber to ingest Gateway telemetry directly from the cloud infrastructure.
 - [x] **Dead-Letter Queue (DLQ):** Implementation of a resilient DLQ (`telemetry_dlq`) in TimescaleDB to catch and persist Protobuf 'Poison Pills' without crashing the worker or entering infinite retry loops.
-- [x] **Mega-Schema Convergence:** Unified 15-field Protobuf schema aligned 1:1 between edge firmware (C/Nanopb) and backend (Rust/prost), covering environmental, particulate, aquatic, and node diagnostic data.
+- [x] **Mega-Schema Convergence (v2.0 - 33 Fields):** Unified 33-field Protobuf schema aligned 1:1 between edge firmware (C/Nanopb) and backend (Rust/prost), covering environmental, particulate counts, optical obstruction diagnostics, virtual sensors (eCO2/bVOC/TVOC), and node operational status.
 - [x] **Gateway Health Diagnostics:** Dedicated ingestion pipeline and TimescaleDB hypertable for edge gateway health events (SD card status, heap monitoring, uptime, degradation alerts).
 - [x] **Industrial HMI Resilience**: Implemented automatic WebSocket reconnects, "Stale" data attenuation (grayscaling/dimming), and Gruvbox aesthetics.
 - [x] **Zero-Trust Authentication (JWT):** Implementation of dual-extraction JWT middleware (Authorization header + Query Parameter) in Axum to isolate HMI telemetry endpoints and ensure strict access control.

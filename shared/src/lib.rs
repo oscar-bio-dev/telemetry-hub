@@ -475,6 +475,93 @@ pub struct TelemetryPayload {
     pub battery_mv: Option<u32>,
     /// Contador de ciclos de deep sleep
     pub sleep_cycles: Option<u32>,
+    /// Warmup BSEC en progreso (12 pulsos iniciales)
+    pub is_calibrating: Option<bool>,
+
+    // ─── Sensores Virtuales BSEC ────────────────────────────────────────
+    /// CO2 equivalente derivado de VOCs en ppm
+    pub eco2: Option<f64>,
+    /// Breath VOC equivalente en ppm
+    pub bvoc: Option<f64>,
+    /// Total VOC equivalente en ppb
+    pub tvoc: Option<f64>,
+
+    // ─── Partículas BMV080 — Conteo Numérico ────────────────────────────
+    /// Concentración numérica PM1.0 (#/m³)
+    pub pm1_0_count: Option<f64>,
+    /// Concentración numérica PM2.5 (#/m³)
+    pub pm2_5_count: Option<f64>,
+    /// Concentración numérica PM10.0 (#/m³)
+    pub pm10_0_count: Option<f64>,
+
+    // ─── Salud del Sensor Láser BMV080 ──────────────────────────────────
+    /// Indica si la óptica o lente del sensor láser está sucia u obstruida
+    pub is_laser_obstructed: Option<bool>,
+    /// Indica si la concentración supera el rango máximo de medición
+    pub is_pm_out_of_range: Option<bool>,
+    /// Tiempo de operación acumulado del láser en segundos
+    pub laser_runtime: Option<f64>,
+
+    // ─── Diagnósticos Pasivos y Estado ──────────────────────────────────
+    /// Bitmask de errores de hardware activos
+    pub system_error_bitmask: Option<u32>,
+    /// Estado operativo del nodo
+    pub status: Option<NodeStatus>,
+}
+
+// ─── Enums Canónicos del Mega-Esquema ──────────────────────────────────────
+
+/// Estado operativo reportado por el nodo sensor.
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    utoipa::ToSchema,
+    prost::Enumeration,
+)]
+#[repr(i32)]
+pub enum NodeStatus {
+    /// Nodo operando y muestreando normalmente en producción
+    Monitoring = 0,
+    /// Nodo en fase inicial de estabilización y warmup de sensores (12 pulsos)
+    Calibrating = 1,
+    /// Nodo ejecutando autoprueba de silicio
+    SelfTesting = 2,
+    /// Fallo crítico de hardware detectado
+    HardwareError = 3,
+}
+
+/// Comandos que pueden ser enviados hacia el nodo (Downlink).
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    utoipa::ToSchema,
+    prost::Enumeration,
+)]
+#[allow(clippy::enum_variant_names)]
+#[repr(i32)]
+pub enum Command {
+    /// Ningún comando pendiente
+    CmdNone = 0,
+    /// Ejecutar autodiagnóstico I2C/ASIC
+    CmdRunSelfTest = 1,
+    /// Reiniciar microcontrolador
+    CmdReboot = 2,
 }
 
 // ─── DTO Protobuf (Wire Format — f32 del hardware) ──────────────────────────
@@ -533,6 +620,60 @@ pub struct TelemetryPayloadPb {
     pub battery_mv: Option<u32>,
     #[prost(uint32, optional, tag = "21")]
     pub sleep_cycles: Option<u32>,
+    #[prost(bool, optional, tag = "22")]
+    pub is_calibrating: Option<bool>,
+
+    // VOCs y CO2 Equivalente (BSEC)
+    #[prost(float, optional, tag = "23")]
+    pub eco2: Option<f32>,
+    #[prost(float, optional, tag = "24")]
+    pub bvoc: Option<f32>,
+    #[prost(float, optional, tag = "25")]
+    pub tvoc: Option<f32>,
+
+    // Partículas (BMV080 Láser) — Conteo Numérico (#/m³)
+    #[prost(float, optional, tag = "26")]
+    pub pm1_0_count: Option<f32>,
+    #[prost(float, optional, tag = "27")]
+    pub pm2_5_count: Option<f32>,
+    #[prost(float, optional, tag = "28")]
+    pub pm10_0_count: Option<f32>,
+
+    // Estado Láser BMV080
+    #[prost(bool, optional, tag = "29")]
+    pub is_laser_obstructed: Option<bool>,
+    #[prost(bool, optional, tag = "30")]
+    pub is_pm_out_of_range: Option<bool>,
+    #[prost(float, optional, tag = "31")]
+    pub laser_runtime: Option<f32>,
+
+    // Status Report Pasivo del Nodo
+    #[prost(uint32, optional, tag = "32")]
+    pub system_error_bitmask: Option<u32>,
+    #[prost(enumeration = "NodeStatus", optional, tag = "33")]
+    pub status: Option<i32>,
+}
+
+/// DTO Protobuf para ACK transmitido por el Gateway hacia el Nodo.
+#[derive(Clone, PartialEq, prost::Message)]
+pub struct GatewayAckPb {
+    #[prost(enumeration = "Command", optional, tag = "1")]
+    pub command: Option<i32>,
+    #[prost(uint64, optional, tag = "2")]
+    pub current_epoch_s: Option<u64>,
+}
+
+/// DTO Protobuf para reporte de autodiagnóstico activo emitido por el nodo.
+#[derive(Clone, PartialEq, prost::Message)]
+pub struct DiagnosticReportPb {
+    #[prost(uint32, optional, tag = "1")]
+    pub system_error_bitmask: Option<u32>,
+    #[prost(bool, optional, tag = "2")]
+    pub scd41_passed: Option<bool>,
+    #[prost(bool, optional, tag = "3")]
+    pub bmv080_passed: Option<bool>,
+    #[prost(bool, optional, tag = "4")]
+    pub bme688_passed: Option<bool>,
 }
 
 /// Conversión del DTO Protobuf (f32 wire) al Modelo de Dominio (f64 analítico).
@@ -540,13 +681,22 @@ pub struct TelemetryPayloadPb {
 impl TryFrom<TelemetryPayloadPb> for TelemetryPayload {
     type Error = TelemetryError;
     fn try_from(pb: TelemetryPayloadPb) -> Result<Self, Self::Error> {
-        let measured_at =
-            chrono::DateTime::from_timestamp_millis(i64::try_from(pb.measured_at_ms).unwrap_or(0))
-                .unwrap_or_default();
-
-        let ingested_at =
+        let ingested_at = if pb.ingested_at_ms == 0 {
+            Utc::now()
+        } else {
             chrono::DateTime::from_timestamp_millis(i64::try_from(pb.ingested_at_ms).unwrap_or(0))
-                .unwrap_or_default();
+                .unwrap_or_else(Utc::now)
+        };
+
+        // Si el nodo perdió la batería RTC (measured_at_ms == 0), fallback al ingested_at
+        let measured_at = if pb.measured_at_ms == 0 {
+            ingested_at
+        } else {
+            chrono::DateTime::from_timestamp_millis(i64::try_from(pb.measured_at_ms).unwrap_or(0))
+                .unwrap_or(ingested_at)
+        };
+
+        let status = pb.status.and_then(|s| NodeStatus::try_from(s).ok());
 
         Ok(Self {
             protocol_version: pb.protocol_version,
@@ -576,6 +726,18 @@ impl TryFrom<TelemetryPayloadPb> for TelemetryPayload {
                 .transpose()?,
             battery_mv: pb.battery_mv,
             sleep_cycles: pb.sleep_cycles,
+            is_calibrating: pb.is_calibrating,
+            eco2: pb.eco2.map(f64::from),
+            bvoc: pb.bvoc.map(f64::from),
+            tvoc: pb.tvoc.map(f64::from),
+            pm1_0_count: pb.pm1_0_count.map(f64::from),
+            pm2_5_count: pb.pm2_5_count.map(f64::from),
+            pm10_0_count: pb.pm10_0_count.map(f64::from),
+            is_laser_obstructed: pb.is_laser_obstructed,
+            is_pm_out_of_range: pb.is_pm_out_of_range,
+            laser_runtime: pb.laser_runtime.map(f64::from),
+            system_error_bitmask: pb.system_error_bitmask,
+            status,
         })
     }
 }
@@ -738,6 +900,18 @@ mod tests {
                 dissolved_oxygen: None,
                 battery_mv: Some(3300),
                 sleep_cycles: Some(42),
+                is_calibrating: Some(false),
+                eco2: Some(400.0),
+                bvoc: Some(0.1),
+                tvoc: Some(15.0),
+                pm1_0_count: Some(120.0),
+                pm2_5_count: Some(50.0),
+                pm10_0_count: Some(10.0),
+                is_laser_obstructed: Some(false),
+                is_pm_out_of_range: Some(false),
+                laser_runtime: Some(1.2),
+                system_error_bitmask: Some(0),
+                status: Some(NodeStatus::Monitoring as i32),
             };
 
             let payload: Result<TelemetryPayload, _> = pb.try_into();
@@ -746,7 +920,53 @@ mod tests {
             assert_eq!(p.battery_mv, Some(3300));
             assert_eq!(p.sleep_cycles, Some(42));
             assert_eq!(p.event_id, "evt-123");
+            assert_eq!(p.status, Some(NodeStatus::Monitoring));
+            assert_eq!(p.is_calibrating, Some(false));
+            assert_eq!(p.is_laser_obstructed, Some(false));
         }
+    }
+
+    #[test]
+    fn test_telemetry_timestamp_zero_fallback() {
+        let pb = TelemetryPayloadPb {
+            protocol_version: 1,
+            schema_version: 1,
+            event_id: "evt-rtc-zero".to_string(),
+            gateway_id: "gw-1".to_string(),
+            device_id: "node-rtc-zero".to_string(),
+            node_sequence: 1,
+            measured_at_ms: 0,
+            ingested_at_ms: 1_700_000_000_000,
+            temperature: Some(25.0),
+            humidity: Some(50.0),
+            pressure: None,
+            gas_resistance: None,
+            iaq: None,
+            co2: None,
+            pm1_0: None,
+            pm2_5: None,
+            pm10_0: None,
+            ph: None,
+            dissolved_oxygen: None,
+            battery_mv: None,
+            sleep_cycles: None,
+            is_calibrating: None,
+            eco2: None,
+            bvoc: None,
+            tvoc: None,
+            pm1_0_count: None,
+            pm2_5_count: None,
+            pm10_0_count: None,
+            is_laser_obstructed: None,
+            is_pm_out_of_range: None,
+            laser_runtime: None,
+            system_error_bitmask: None,
+            status: None,
+        };
+
+        let payload: TelemetryPayload = pb.try_into().expect("conversion should succeed");
+        assert_eq!(payload.measured_at, payload.ingested_at);
+        assert_eq!(payload.measured_at.timestamp_millis(), 1_700_000_000_000);
     }
 
     #[test]
