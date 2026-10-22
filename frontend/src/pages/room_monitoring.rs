@@ -82,9 +82,8 @@ pub fn RoomMonitoring() -> impl IntoView {
     create_effect(move |_| {
         let handle = leptos::set_interval_with_handle(
             move || {
-                let token = match jwt_token.get() {
-                    Some(t) => t,
-                    None => return,
+                let Some(token) = jwt_token.get() else {
+                    return;
                 };
 
                 spawn_local(async move {
@@ -126,9 +125,8 @@ pub fn RoomMonitoring() -> impl IntoView {
         // Depend on retry_trigger to re-run this effect
         retry_trigger.track();
 
-        let token = match jwt_token.get() {
-            Some(t) => t,
-            None => return, // Wait until token is available
+        let Some(token) = jwt_token.get() else {
+            return; // Wait until token is available
         };
 
         let window = web_sys::window().expect("no global `window` exists");
