@@ -1,11 +1,11 @@
 services:
   db:
     image: timescale/timescaledb-ha:pg15-latest
-    container_name: oscar_bio_dev_db
+    container_name: telemetry_hub_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: oscar_bio_dev
+      POSTGRES_DB: telemetry_hub
     ports:
       - "127.0.0.1:5432:5432"
     volumes:

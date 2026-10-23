@@ -1,6 +1,6 @@
-# Contributing to oscar-bio-dev
+# Contributing to telemetry-hub
 
-First off, thank you for considering contributing to the `oscar-bio-dev` telemetry hub! We aim for space-grade, industrial-level code quality.
+First off, thank you for considering contributing to the `telemetry-hub` platform! We aim for space-grade, industrial-level code quality.
 
 ## Development Process
 

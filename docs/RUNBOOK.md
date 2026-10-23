@@ -1,5 +1,5 @@
 # 🛰️ EcoWest Instrument — Operational Runbook & Verification Manual
-**Platform:** `oscar-bio-dev` (Ecological Telemetry Hub & Cognitive Digital Twin)  
+**Platform:** `telemetry-hub` (Ecological Telemetry Hub & Cognitive Digital Twin)  
 **Standard:** Industrial Space-Grade Systems Engineering  
 **Version:** 1.0.0 (Post Mega-Schema v2.0 Convergence)  
 
@@ -86,7 +86,7 @@ docker compose version
 
 ## 3. Configuración de Entorno (.env)
 
-Cree un archivo `.env` en la raíz del repositorio (`oscar-bio-dev/.env`) basándose en [.env.example](file:///run/media/ecotech/1c5134f3-88ae-49dd-8284-12d45f74828b/home/oscar/Workspaces/oscar-bio-dev/.env.example):
+Cree un archivo `.env` en la raíz del repositorio (`telemetry-hub/.env`) basándose en [.env.example](file:///run/media/ecotech/1c5134f3-88ae-49dd-8284-12d45f74828b/home/oscar/Workspaces/oscar-bio-dev/.env.example):
 
 ```bash
 cp .env.example .env
@@ -96,7 +96,7 @@ cp .env.example .env
 
 | Variable | Valor por Defecto (Desarrollo) | Descripción |
 |---|---|---|
-| `DATABASE_URL` | `postgres://postgres:password@localhost:5432/oscar_bio_dev` | Cadena de conexión al cluster TimescaleDB. |
+| `DATABASE_URL` | `postgres://postgres:password@localhost:5432/telemetry_hub` | Cadena de conexión al cluster TimescaleDB. |
 | `PUBSUB_EMULATOR_HOST` | `localhost:8085` | Host del emulador local de GCP Pub/Sub. |
 | `PUBSUB_SUBSCRIPTION_NAME` | `projects/oscar-bio-dev-project/subscriptions/room-telemetry-sub` | Nombre canónico de la suscripción Pub/Sub. |
 | `GEMINI_API_KEY` | *(Opcional en dev / Requerido para Chat IA)* | Llave de API para el modelo generativo del Gemelo Digital. |
@@ -121,7 +121,7 @@ docker compose ps
 ```
 
 Debe observar dos contenedores en estado `Up`:
-- `oscar_bio_dev_db`: Puerto `127.0.0.1:5432`
+- `telemetry_hub_db`: Puerto `127.0.0.1:5432`
 - `pubsub_emulator`: Puerto `0.0.0.0:8085`
 
 ---
@@ -134,7 +134,7 @@ Para auditar o verificar el estado de las tablas directamente en PostgreSQL:
 
 ```bash
 # Conexión interactiva a TimescaleDB
-docker exec -it oscar_bio_dev_db psql -U postgres -d oscar_bio_dev
+docker exec -it telemetry_hub_db psql -U postgres -d telemetry_hub
 ```
 
 ### Consultas de Verificación Operativa
@@ -322,7 +322,7 @@ curl -X POST http://localhost:8085/v1/projects/oscar-bio-dev-project/topics/room
 ## 11. Guía de Solución de Problemas (Troubleshooting)
 
 ### A. Fallo de Conexión a Base de Datos
-- **Síntoma:** Error `DATABASE_URL must be set` o `Connection refused (oscar_bio_dev_db:5432)`.
+- **Síntoma:** Error `DATABASE_URL must be set` o `Connection refused (telemetry_hub_db:5432)`.
 - **Acción:**
   ```bash
   docker compose ps

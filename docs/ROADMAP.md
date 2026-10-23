@@ -1,10 +1,10 @@
-# Oscar Mora - Digital Portfolio & Conservation Technology Hub
+# Telemetry Hub - Engineering Roadmap
 
-This repository hosts the digital portfolio and interactive development environment of **Oscar Mora**, Marine Biologist and Embedded Engineer (Conservation Technologist).
+This repository hosts the source code and development roadmap for the **Ecological Telemetry Hub**, an edge-to-cloud environmental monitoring platform developed by **Oscar Mora** at **EcoWest Instrument**.
 
 ## 🚀 Mission and Architecture (Space / Industrial Grade)
 
-This project is not a simple website. It is an **Engineering and Telemetry Hub** designed from scratch with a *bare-metal* and *zero-cost abstractions* philosophy using **Rust**. The goal is to build an interactive, concurrent, and industrial-grade platform for real-time visualization of environmental sensor data (TinyML, RS485, IoT), while simultaneously serving as a living resume.
+This project is an **Ecological Telemetry Hub** designed from scratch with a *bare-metal* and *zero-cost abstractions* philosophy using **Rust**. The goal is to build an interactive, concurrent, and industrial-grade platform for real-time validation, ingestion, and visualization of environmental sensor data (TinyML, RS485, IoT, Protobuf).
 
 ---
 

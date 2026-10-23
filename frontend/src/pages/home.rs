@@ -23,10 +23,10 @@ pub fn Home() -> impl IntoView {
             <section id="projects">
                 <h2 class="section-title">"Telemetry & Systems"</h2>
                 <div class="project-grid">
-                    <a href="https://github.com/oscar-bio-dev/oscar-bio-dev" target="_blank" class="project-item">
+                    <a href="https://github.com/oscar-bio-dev/telemetry-hub" target="_blank" class="project-item">
                         <span class="project-icon" aria-hidden="true">"🦀"</span>
                         <div class="project-info">
-                            <h3>"oscar-bio-dev / hub"</h3>
+                            <h3>"telemetry-hub"</h3>
                             <p>"Space-grade IoT telemetry platform built in Rust (Axum + Tokio)."</p>
                         </div>
                     </a>

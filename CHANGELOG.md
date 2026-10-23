@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HMI Calibration & Optical Health**: Updated Leptos frontend to display dynamic "⏳ Calibrando Sensores" badge during BSEC warmup (`is_calibrating`), prominent optical alerts for dirty/blocked optics (`is_laser_obstructed`), and network transmission latency tracking (`ingested_at - measured_at`).
 - **Operational Runbook**: Created comprehensive `docs/RUNBOOK.md` covering architecture, toolchain, environment setup, Docker infrastructure, DB migrations, service boot, end-to-end simulation, quality gates, and disaster recovery procedures.
 
+### Changed
+- **Repository Rebranding & Identity Decoupling**: Renamed and refactored repository identity to `telemetry-hub` (`https://github.com/oscar-bio-dev/telemetry-hub`), transitioning the codebase from a personal profile hub into a dedicated product/project repository for the Ecological Telemetry Hub:
+  - Updated workspace `Cargo.toml` repository metadata to `https://github.com/oscar-bio-dev/telemetry-hub`.
+  - Renamed Docker container to `telemetry_hub_db` and PostgreSQL database to `telemetry_hub` in `docker-compose.yml`, `.env.example`, and `.env`.
+  - Restructured `README.md` and `README.es.md` to focus strictly on platform architecture, tech stack, and quick start, removing personal biographical sections.
+  - Updated contributing guidelines, roadmap, and runbook documentation to align with `telemetry-hub` repository and database naming.
+
 ### Fixed
 - **Strict Event ID Semantics & Poison Pill Isolation**: Eliminated `uuid::Uuid::new_v4()` generation fallback in `persist_telemetry`. Incoming telemetry now undergoes strict UUID validation on `event_id`, diverting invalid UUIDs to `telemetry_dlq` as Poison Pills before digital twin or DB ingestion. Ensured `measured_at_ms == 0` explicitly assigns `Utc::now()`.
 

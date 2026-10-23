@@ -1,6 +1,6 @@
-# Workspace Agent Rules & Constraints (oscar-bio-dev)
+# Workspace Agent Rules & Constraints (telemetry-hub)
 
-This document defines the strict, industrial-grade behavioral rules, architectural guidelines, and repository governance standards that any AI agent must follow when interacting with this workspace. This repository (`oscar-bio-dev`) is exclusively dedicated to **Rust, Frontend (Wasm), Backend, Telemetry, Databases, and Web HMI**.
+This document defines the strict, industrial-grade behavioral rules, architectural guidelines, and repository governance standards that any AI agent must follow when interacting with this workspace. This repository (`telemetry-hub`) is exclusively dedicated to **Rust, Frontend (Wasm), Backend, Telemetry, Databases, and Web HMI**.
 
 > **Enforcement Levels:** Rules use the following classifications:
 > - 🔴 **MANDATORY** — Hard-blocking. Violation prevents merge or deployment.
