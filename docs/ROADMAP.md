@@ -62,6 +62,7 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **End-to-End Local Emulator**: Implemented a `dummy_publisher` to inject 21-field Protobuf payloads into the local GCP Pub/Sub emulator to validate full stack connectivity.
 - [x] **DLQ Observability (Terminal de Alertas):** Exposed DLQ endpoints via Axum and built a reactive Leptos UI to monitor Poison Pills in real-time.
 - [x] **Strict Event ID & Fallback Semantics:** Strict UUID verification on `event_id` in Pub/Sub worker, rejecting invalid IDs as Poison Pills into `telemetry_dlq` instead of generating fallback UUIDs, and explicit `Utc::now()` fallback when `measured_at_ms == 0`.
+- [x] **TimescaleDB Mega-Schema Persistence (v2.0 - Fields 22..33):** Added migration `0006_mega_schema_v2_fields.sql` and updated `persist_telemetry` to persist all 33 canonical fields into the `telemetry` hypertable.
 ---
 
 ## 🛠️ Local Development Environment

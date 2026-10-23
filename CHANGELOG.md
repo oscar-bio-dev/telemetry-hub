@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Time-Sync Fallback**: Automatic detection of `measured_at_ms == 0` (uninitialized RTC or dead backup battery) falling back to `ingested_at_ms` or `Utc::now()` to prevent timestamp corruption (1970-01-01).
 - **DLQ Operability & Observability**: Exposed `GET /api/dlq/recent` endpoint in Axum and created the "Terminal de Alertas Críticas" in the Leptos HMI for real-time Poison Pill inspection.
 - **Zero-Trust JWT Middleware**: Dual extraction (`Authorization: Bearer` and `?token=`) protecting WebSockets and digital twin routes.
+- **TimescaleDB Mega-Schema Persistence (v2.0)**: Added migration `0006_mega_schema_v2_fields.sql` and updated `persist_telemetry` to persist all 33 canonical fields into the `telemetry` hypertable.
 
 ### Fixed
 - **Strict Event ID Semantics & Poison Pill Isolation**: Eliminated `uuid::Uuid::new_v4()` generation fallback in `persist_telemetry`. Incoming telemetry now undergoes strict UUID validation on `event_id`, diverting invalid UUIDs to `telemetry_dlq` as Poison Pills before digital twin or DB ingestion. Ensured `measured_at_ms == 0` explicitly assigns `Utc::now()`.

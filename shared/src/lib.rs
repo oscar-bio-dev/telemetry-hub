@@ -538,6 +538,25 @@ pub enum NodeStatus {
     HardwareError = 3,
 }
 
+impl NodeStatus {
+    /// Devuelve el identificador de texto canónico del estado operativo.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Monitoring => "MONITORING",
+            Self::Calibrating => "CALIBRATING",
+            Self::SelfTesting => "SELF_TESTING",
+            Self::HardwareError => "HARDWARE_ERROR",
+        }
+    }
+}
+
+impl std::fmt::Display for NodeStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// Comandos que pueden ser enviados hacia el nodo (Downlink).
 #[derive(
     Clone,
@@ -1043,5 +1062,14 @@ mod tests {
         assert!(!event.sd_card_mounted);
         assert_eq!(event.sd_io_errors, 42);
         assert_eq!(event.alert_message.as_deref(), Some("SD card removed"));
+    }
+
+    #[test]
+    fn test_node_status_as_str() {
+        assert_eq!(NodeStatus::Monitoring.as_str(), "MONITORING");
+        assert_eq!(NodeStatus::Calibrating.as_str(), "CALIBRATING");
+        assert_eq!(NodeStatus::SelfTesting.as_str(), "SELF_TESTING");
+        assert_eq!(NodeStatus::HardwareError.as_str(), "HARDWARE_ERROR");
+        assert_eq!(format!("{}", NodeStatus::Monitoring), "MONITORING");
     }
 }

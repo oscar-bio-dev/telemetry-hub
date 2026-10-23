@@ -190,9 +190,18 @@ async fn persist_telemetry(
             event_id, protocol_version, schema_version, gateway_id, device_id, node_sequence,
             measured_at, ingested_at, temperature, humidity, ph, dissolved_oxygen,
             pressure, gas_resistance, co2, iaq, pm1_0, pm2_5, pm10_0,
-            battery_mv, sleep_cycles
+            battery_mv, sleep_cycles,
+            is_calibrating, eco2, bvoc, tvoc, pm1_0_count, pm2_5_count, pm10_0_count,
+            is_laser_obstructed, is_pm_out_of_range, laser_runtime, system_error_bitmask, status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        VALUES (
+            $1, $2, $3, $4, $5, $6,
+            $7, $8, $9, $10, $11, $12,
+            $13, $14, $15, $16, $17, $18, $19,
+            $20, $21,
+            $22, $23, $24, $25, $26, $27, $28,
+            $29, $30, $31, $32, $33
+        )
         ON CONFLICT (event_id, measured_at) DO NOTHING
         ",
     )
@@ -217,6 +226,18 @@ async fn persist_telemetry(
     .bind(payload.pm10_0.map(shared::Pm10_0::value))
     .bind(payload.battery_mv.map(|v| i32::try_from(v).unwrap_or(i32::MAX)))
     .bind(payload.sleep_cycles.map(|v| i32::try_from(v).unwrap_or(i32::MAX)))
+    .bind(payload.is_calibrating)
+    .bind(payload.eco2)
+    .bind(payload.bvoc)
+    .bind(payload.tvoc)
+    .bind(payload.pm1_0_count)
+    .bind(payload.pm2_5_count)
+    .bind(payload.pm10_0_count)
+    .bind(payload.is_laser_obstructed)
+    .bind(payload.is_pm_out_of_range)
+    .bind(payload.laser_runtime)
+    .bind(payload.system_error_bitmask.map(i64::from))
+    .bind(payload.status.map(shared::NodeStatus::as_str))
     .execute(&state.db_pool)
     .await?;
 
