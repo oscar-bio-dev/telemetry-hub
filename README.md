@@ -1,20 +1,55 @@
-# 🌊 oscar-bio-dev & Telemetry Hub 🛰️
+# Oscar Mora | Conservation Technologist & Embedded Systems Engineer
 
-[![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Axum](https://img.shields.io/badge/Axum-Framework-blue?style=for-the-badge)](https://github.com/tokio-rs/axum)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Portfolio](https://img.shields.io/badge/Website-oscar--bio.dev-2a9d8f?style=for-the-badge&logo=googlechrome&logoColor=white)](https://oscar-bio.dev/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-oscar--bio--dev-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/oscar-bio-dev)
+[![Rust](https://img.shields.io/badge/Rust-1.85+-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Axum](https://img.shields.io/badge/Axum-0.8-blue?style=for-the-badge)](https://github.com/tokio-rs/axum)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL_16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.timescale.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> **Hi, I'm Oscar Mora 👋** <br/>
-> *Conservation Technologist | Embedded Systems Engineer | Founder of EcoWest Instrument*
->
-> I bridge the gap between biological complexity and bare-metal hardware, translating deep ecological requirements into ultra-low-power IoT sensors and Edge AI solutions for environmental monitoring. Based in Pueblo West, Colorado, I focus on building robust, resilient instrumentation that survives extreme field conditions.
+[English](README.md) • [Versión en Español](README.es.md)
 
 ---
 
-## 🚀 The Telemetry Hub Architecture
+## About Me
 
-This repository is more than a profile; it hosts my live, industrial-grade **Ecological Telemetry Platform**. Built entirely in **Pure Rust**, it is designed to handle high-frequency, binary environmental data (Protobuf) from ESP32/RP2350 edge nodes, persist it in TimescaleDB, and analyze it using an AI Cognitive Digital Twin.
+I am a **Conservation Technologist**, **Marine Biologist**, and **Embedded Systems Engineer** based in Pueblo West, Colorado. I bridge the gap between ecological research and bare-metal instrumentation, translating complex environmental requirements into low-power IoT monitoring nodes, resilient telemetry infrastructure, and data-driven analytical platforms.
+
+As the founder of **[EcoWest Instrument](https://oscar-bio.dev/)**, I build ruggedized hardware and software solutions engineered to withstand extreme field deployments.
+
+- **Website & Portfolio:** [https://oscar-bio.dev/](https://oscar-bio.dev/)
+- **Core Focus:** In-situ environmental sensing, low-power edge telemetry, distributed time-series architectures, and applied edaphic biodiversity modeling.
+- **Location:** Pueblo West, Colorado, United States.
+
+---
+
+## Featured Work & Initiatives
+
+- **[EcoWest Instrument](https://oscar-bio.dev/):** Commercial and scientific instrumentation for soil and aquatic ecosystems. We engineer autonomous field loggers, low-power LoRa/ESP-NOW field gateways, and multi-parameter sensor arrays.
+- **Telemetry Hub (This Repository):** Edge-to-cloud telemetry ingestion and digital twin platform built with Rust (Axum, Tokio) and Leptos WebAssembly, backed by TimescaleDB.
+- **Ecological & Edaphic Research:** Applied studies in soil biodiversity and earthworm taxonomy, correlating continuous microclimate and soil chemistry metrics with biological population dynamics.
+
+---
+
+## Tech Stack
+
+| Domain | Technologies & Tools |
+|---|---|
+| **Languages** | Rust (Backend, WebAssembly), Embedded C/C++, SQL, Python, Bash |
+| **Microcontrollers & Edge** | Espressif (ESP32-P4 Gateway, ESP32-C6, ESP32-WROOM), Raspberry Pi (RP2350, RP2040), STMicroelectronics (STM32) |
+| **Firmware & RTOS** | FreeRTOS, ESP-IDF, Pico SDK, Nanopb (Protocol Buffers) |
+| **Sensors & Transduction** | Bosch Sensortec BME688 (IAQ, VOC, temp, humidity, pressure), Sensirion SCD41 (Photoacoustic NDIR CO2), Bosch BMV080 (Laser Particulate PM1.0/PM2.5/PM10), Optical Dissolved Oxygen & pH probes |
+| **Backend Architecture** | Rust (Axum, Tokio, Tower), Google Cloud Pub/Sub, WebSockets, JWT (ES256), REST APIs |
+| **Storage & Spatial Data** | PostgreSQL 16, TimescaleDB (Hypertables, compression policies), PostGIS (spatial indexing), SQLx |
+| **Web HMI & Dashboard** | Leptos (WebAssembly / Wasm SPA), Gruvbox Hard Dark theme, real-time WebSocket state synchronization |
+| **Cloud & Intelligence** | Google Gemini AI (Cognitive Digital Twin contextual telemetry reasoning), GCP Pub/Sub, Docker Compose |
+| **Engineering Rigor** | Zero-warning pedantic Clippy (`-D warnings`), automated vulnerability auditing (`cargo audit`), Conventional Commits |
+
+---
+
+## Telemetry Hub: Project Architecture
+
+This repository hosts the source code for the **Ecological Telemetry Hub**, an edge-to-cloud platform designed to ingest, validate, persist, and visualize high-frequency environmental sensor data.
 
 ### System Diagram
 
@@ -46,53 +81,74 @@ graph TD
     classDef db fill:#316192,stroke:#264653,stroke-width:2px,color:#fff;
 
     class A,GW hardware;
-    class B_PUB,B_MTLS,V,W,GH rust;
+    class B_PUB,V,GH rust;
     class AI ai;
     class DB db;
 ```
 
-### Key Features
+### Key Technical Characteristics
 
-- **Unified Mega-Schema (21 fields)**: A single Protobuf contract shared between edge firmware (C/Nanopb) and backend (Rust/prost), covering environmental, particulate, aquatic, and node diagnostics data.
-- **Zero-Cost Binary Pipelines**: Uses `prost` (Protobuf) with hybrid `f32` (wire DTO) → `f64` (domain/DB) architecture for lossless telemetry deserialization.
-- **Hardware Security via Cloud**: Uses GCP Pub/Sub with Edge Gateway (JWT/ES256) auth. The backend acts as a completely decoupled consumer service.
-- **Resilient Ingestion (DLQ)**: A native Cloud-Native Pull Subscriber handles ingestion asynchronously, persisting poison pills to a Dead-Letter Queue instead of failing or retrying infinitely.
-- **Single Public Port**: Port `:3000` serves the public UI, Chatbot, and WebSocket streaming (rate-limited), ensuring no direct edge termination logic bloats the backend.
-- **Cognitive Digital Twin**: An in-memory, thread-safe state representation (`Arc<RwLock<LruCache>>`, capped at 10,000 devices) of all physical nodes.
-- **Gateway Health Diagnostics**: Dedicated ingestion pipeline via Pub/Sub for edge gateway health events (SD card status, heap monitoring, degradation alerts).
-- **EcoTech AI Agent**: Direct integration with Gemini Flash Lite via `system_instruction` schema, with prompt injection protection and real-time reasoning over environmental data.
-- **WebAssembly (Wasm) Dashboard**: A custom-built, Gruvbox-styled SPA using **Leptos**, featuring real-time WebSocket reconnection, "Staleness" visualization, and avoiding JS bloat while rendering 12+ sensor metrics per node.
-- **Spatial-Temporal Database**: Pre-configured `docker-compose` stack with **PostgreSQL + PostGIS + TimescaleDB**.
-
-### Telemetry Schema
-
-The backend supports the following sensor data from the unified Mega-Schema:
-
-| Category | Fields | Sensors |
-|---|---|---|
-| Environmental | `temperature`, `humidity`, `pressure`, `gas_resistance`, `iaq` | BME688, SCD41 |
-| Particulate | `pm1_0`, `pm2_5`, `pm10_0` | BMV080 |
-| Aquatic/Soil | `ph`, `dissolved_oxygen` | Future probes |
-| Air Quality | `co2` | SCD41 |
-| Node Diagnostics | `battery_mv`, `sleep_cycles` | ESP32 ADC / RTC |
+- **Unified Mega-Schema (v2.0 - 33 Fields):** A single Protobuf contract shared between embedded C firmware (Nanopb) and backend Rust services (`prost`), spanning physical metrics (temperature, humidity, pressure), particulate counts, gas resistance, IAQ, virtual sensors (eCO2, bVOC), and optical diagnostics.
+- **Lossless Serialization:** Wire payloads use compact `f32` serialization over radio and cloud queues, safely widening into `f64` for high-precision analytical persistence in TimescaleDB hypertables.
+- **Resilient Cloud Ingestion & DLQ:** Asynchronous GCP Pub/Sub Pull Subscriber verifies payload integrity and validates UUID format. Malformed packets ("poison pills") are diverted to a dedicated Dead-Letter Queue (`telemetry_dlq`) rather than triggering infinite retry storms.
+- **In-Memory Digital Twin:** Thread-safe state representation (`Arc<RwLock<LruCache>>` capped at 10,000 devices) delivering sub-millisecond retrieval of active sensor node states for queries and WebSocket clients.
+- **Cognitive AI Integration:** Context-aware telemetry reasoning powered by Google Gemini, querying real-time Digital Twin state under strict schema and prompt-injection defenses.
+- **WebAssembly HMI:** Responsive Single Page Application built in Rust using Leptos, featuring real-time WebSocket reconnects, sensor calibration state badges (`is_calibrating`), laser obstruction alerts (`is_laser_obstructed`), and network transmission latency tracking without JavaScript overhead.
 
 ---
 
-## 🔭 Current Focus & Other Projects
-- 🌍 **EcoWest Instrument:** Designing custom environmental monitoring hardware and telemetry systems for soil and water ecology.
-- 🪱 **Ecological Research:** Leading applied earthworm biodiversity and soil taxonomy studies, integrating physical sampling with precision edaphic modeling.
-- ⚙️ **Bare-Metal Engineering:** Developing high-performance, statically typed telemetry platforms from scratch using **Pure Rust** and **Embedded C/C++**.
-- 🛠️ **Hardware:** Texas Instruments, Microchip Technology, Analog Devices, RP2350, Espressif (ESP32), STMicroelectronics (STM32).
+## Quick Start
+
+### Prerequisites
+- [Rust](https://rustup.rs/) (1.85+ stable)
+- [Docker & Docker Compose](https://docs.docker.com/compose/)
+- [Trunk](https://trunkrs.dev/) (`cargo install trunk`)
+
+### Setup & Run
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/oscar-bio-dev/oscar-bio-dev.git
+cd oscar-bio-dev
+
+# 2. Launch database and Pub/Sub emulator
+docker compose up -d
+
+# 3. Configure environment variables
+cp .env.example .env
+# Edit .env to set your DATABASE_URL and optional GEMINI_API_KEY
+
+# 4. Build the WebAssembly frontend
+cd frontend
+trunk build
+cd ..
+
+# 5. Run the Axum backend server (runs migrations automatically)
+cargo run -p backend
+```
+
+Once running, access the services locally:
+- **Web Dashboard & API:** `http://localhost:3000/`
+- **Swagger / OpenAPI Documentation:** `http://localhost:3000/swagger-ui/`
+- **Health Check Endpoint:** `http://localhost:3000/health`
 
 ---
 
-## 🛠️ Contributing & Roadmap
-We follow strict engineering standards (0 warnings on `clippy`, secure `cargo audit` gates, and Type-Driven Design).
-- 👉 **[Dive into the Engineering Roadmap here](docs/ROADMAP.md)**
-- 👉 **[Explore the Operational Runbook](docs/RUNBOOK.md)**
-- 👉 **[See Contributing Guidelines](CONTRIBUTING.md)**
-- 👉 **[Check the Changelog](CHANGELOG.md)**
+## Documentation & References
 
-## 📫 Let's Connect
+Technical deep dives, operation guides, and project management artifacts are located in `docs/`:
+
+- [System Architecture](docs/ARCHITECTURE.md) - Deep dive into Mega-Schema (33 fields), TimescaleDB hypertables, DLQ, and state models.
+- [Engineering Roadmap](docs/ROADMAP.md) - Architectural milestones, completed phases, and upcoming features.
+- [Operational Runbook](docs/RUNBOOK.md) - Deployment, database migrations, service validation, and disaster recovery procedures.
+- [Contributing Guidelines](CONTRIBUTING.md) - Code standards, pedantic clippy quality gates, and commit workflow.
+- [Changelog](CHANGELOG.md) - Chronological release notes and migration history.
+
+---
+
+## Contact & Connect
+
+- **Personal Website:** [https://oscar-bio.dev/](https://oscar-bio.dev/)
+- **Company:** [EcoWest Instrument](https://oscar-bio.dev/)
 - **LinkedIn:** [oscar-bio-dev](https://linkedin.com/in/oscar-bio-dev)
-- **Email:** oscar_bio_dev@outlook.com
+- **Email:** [oscar_bio_dev@outlook.com](mailto:oscar_bio_dev@outlook.com)
