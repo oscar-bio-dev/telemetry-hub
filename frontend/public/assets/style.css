@@ -254,3 +254,73 @@ footer {
     padding-top: 0.5rem;
 }
 
+/* Badge Calibración */
+.badge-calibrating {
+    background-color: var(--accent-yellow);
+    color: var(--bg-hard);
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: auto;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Alerta Lente Láser Sucia / Obstruida */
+.alert-laser-obstructed {
+    background-color: rgba(251, 73, 52, 0.15);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: pulse-border 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-color: var(--accent-red); }
+    50% { border-color: rgba(251, 73, 52, 0.4); }
+}
+
+/* Footer de Metadatos y Latencia */
+.card-footer-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.6rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+}
+
+.card-footer-meta .data-age {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+}
+
+.latency-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.latency-badge {
+    color: var(--accent-blue);
+    font-weight: 600;
+    background-color: var(--bg-card);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+}
+
