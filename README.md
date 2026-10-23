@@ -89,6 +89,7 @@ The backend supports the following sensor data from the unified Mega-Schema:
 ## 🛠️ Contributing & Roadmap
 We follow strict engineering standards (0 warnings on `clippy`, secure `cargo audit` gates, and Type-Driven Design).
 - 👉 **[Dive into the Engineering Roadmap here](docs/ROADMAP.md)**
+- 👉 **[Explore the Operational Runbook](docs/RUNBOOK.md)**
 - 👉 **[See Contributing Guidelines](CONTRIBUTING.md)**
 - 👉 **[Check the Changelog](CHANGELOG.md)**
 

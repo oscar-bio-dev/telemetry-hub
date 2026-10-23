@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-Trust JWT Middleware**: Dual extraction (`Authorization: Bearer` and `?token=`) protecting WebSockets and digital twin routes.
 - **TimescaleDB Mega-Schema Persistence (v2.0)**: Added migration `0006_mega_schema_v2_fields.sql` and updated `persist_telemetry` to persist all 33 canonical fields into the `telemetry` hypertable.
 - **HMI Calibration & Optical Health**: Updated Leptos frontend to display dynamic "⏳ Calibrando Sensores" badge during BSEC warmup (`is_calibrating`), prominent optical alerts for dirty/blocked optics (`is_laser_obstructed`), and network transmission latency tracking (`ingested_at - measured_at`).
+- **Operational Runbook**: Created comprehensive `docs/RUNBOOK.md` covering architecture, toolchain, environment setup, Docker infrastructure, DB migrations, service boot, end-to-end simulation, quality gates, and disaster recovery procedures.
 
 ### Fixed
 - **Strict Event ID Semantics & Poison Pill Isolation**: Eliminated `uuid::Uuid::new_v4()` generation fallback in `persist_telemetry`. Incoming telemetry now undergoes strict UUID validation on `event_id`, diverting invalid UUIDs to `telemetry_dlq` as Poison Pills before digital twin or DB ingestion. Ensured `measured_at_ms == 0` explicitly assigns `Utc::now()`.
