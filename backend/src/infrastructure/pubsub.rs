@@ -70,6 +70,27 @@ pub async fn start_pubsub_worker(
                                         continue;
                                     }
 
+                                    let event_id_uuid = match uuid::Uuid::parse_str(&payload.event_id) {
+                                        Ok(uuid) => uuid,
+                                        Err(e) => {
+                                            tracing::error!(
+                                                "Poison Pill (event_id no es un UUID válido). Msg ID: {}, event_id: {}, Error: {}",
+                                                msg_id,
+                                                payload.event_id,
+                                                e
+                                            );
+                                            handle_poison_pill(
+                                                &state,
+                                                message.data.to_vec(),
+                                                &format!("Invalid UUID in event_id: {e}"),
+                                                None,
+                                            )
+                                            .await;
+                                            handler.ack();
+                                            continue;
+                                        }
+                                    };
+
                                     let event_id = payload.event_id.clone();
 
                                     {
@@ -79,7 +100,7 @@ pub async fn start_pubsub_worker(
 
                                     let _ = state.tx_ws.send(payload.clone());
 
-                                    match persist_telemetry(&state, &payload).await {
+                                    match persist_telemetry(&state, &payload, event_id_uuid).await {
                                         Ok(()) => {
                                             tracing::info!("Mensaje {} persistido exitosamente (ACK)", msg_id);
                                             handler.ack();
@@ -161,10 +182,8 @@ async fn try_init_pubsub() -> Result<
 async fn persist_telemetry(
     state: &AppState,
     payload: &TelemetryPayload,
+    event_id: uuid::Uuid,
 ) -> Result<(), sqlx::Error> {
-    let parsed_event_id =
-        uuid::Uuid::parse_str(&payload.event_id).unwrap_or_else(|_| uuid::Uuid::new_v4());
-
     sqlx::query(
         r"
         INSERT INTO telemetry (
@@ -177,7 +196,7 @@ async fn persist_telemetry(
         ON CONFLICT (event_id, measured_at) DO NOTHING
         ",
     )
-    .bind(parsed_event_id)
+    .bind(event_id)
     .bind(i32::try_from(payload.protocol_version).unwrap_or(1))
     .bind(i32::try_from(payload.schema_version).unwrap_or(1))
     .bind(&payload.gateway_id)
@@ -231,5 +250,24 @@ async fn handle_poison_pill(
             "CRITICAL: Falló la escritura en DLQ PostgreSQL. Poison Pill perdida. Error: {}",
             e
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use uuid::Uuid;
+
+    #[test]
+    fn test_valid_uuid_event_id() {
+        let valid_str = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d";
+        let parsed = Uuid::parse_str(valid_str);
+        assert!(parsed.is_ok());
+    }
+
+    #[test]
+    fn test_invalid_uuid_event_id_detected() {
+        let invalid_str = "evt-random-string-123";
+        let parsed = Uuid::parse_str(invalid_str);
+        assert!(parsed.is_err());
     }
 }

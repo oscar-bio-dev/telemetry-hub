@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DLQ Operability & Observability**: Exposed `GET /api/dlq/recent` endpoint in Axum and created the "Terminal de Alertas Críticas" in the Leptos HMI for real-time Poison Pill inspection.
 - **Zero-Trust JWT Middleware**: Dual extraction (`Authorization: Bearer` and `?token=`) protecting WebSockets and digital twin routes.
 
+### Fixed
+- **Strict Event ID Semantics & Poison Pill Isolation**: Eliminated `uuid::Uuid::new_v4()` generation fallback in `persist_telemetry`. Incoming telemetry now undergoes strict UUID validation on `event_id`, diverting invalid UUIDs to `telemetry_dlq` as Poison Pills before digital twin or DB ingestion. Ensured `measured_at_ms == 0` explicitly assigns `Utc::now()`.
+
 ## [0.8.0] - 2026-09-05
 
 ### Added

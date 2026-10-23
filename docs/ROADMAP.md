@@ -61,6 +61,7 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **Zero-Trust Authentication (JWT):** Implementation of dual-extraction JWT middleware (Authorization header + Query Parameter) in Axum to isolate HMI telemetry endpoints and ensure strict access control.
 - [x] **End-to-End Local Emulator**: Implemented a `dummy_publisher` to inject 21-field Protobuf payloads into the local GCP Pub/Sub emulator to validate full stack connectivity.
 - [x] **DLQ Observability (Terminal de Alertas):** Exposed DLQ endpoints via Axum and built a reactive Leptos UI to monitor Poison Pills in real-time.
+- [x] **Strict Event ID & Fallback Semantics:** Strict UUID verification on `event_id` in Pub/Sub worker, rejecting invalid IDs as Poison Pills into `telemetry_dlq` instead of generating fallback UUIDs, and explicit `Utc::now()` fallback when `measured_at_ms == 0`.
 ---
 
 ## 🛠️ Local Development Environment

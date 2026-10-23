@@ -688,12 +688,12 @@ impl TryFrom<TelemetryPayloadPb> for TelemetryPayload {
                 .unwrap_or_else(Utc::now)
         };
 
-        // Si el nodo perdió la batería RTC (measured_at_ms == 0), fallback al ingested_at
+        // Si el nodo perdió la batería RTC o no tiene sincronización (measured_at_ms == 0), asignar Utc::now()
         let measured_at = if pb.measured_at_ms == 0 {
-            ingested_at
+            Utc::now()
         } else {
             chrono::DateTime::from_timestamp_millis(i64::try_from(pb.measured_at_ms).unwrap_or(0))
-                .unwrap_or(ingested_at)
+                .unwrap_or_else(Utc::now)
         };
 
         let status = pb.status.and_then(|s| NodeStatus::try_from(s).ok());
@@ -964,9 +964,11 @@ mod tests {
             status: None,
         };
 
+        let before = Utc::now();
         let payload: TelemetryPayload = pb.try_into().expect("conversion should succeed");
-        assert_eq!(payload.measured_at, payload.ingested_at);
-        assert_eq!(payload.measured_at.timestamp_millis(), 1_700_000_000_000);
+        let after = Utc::now();
+        assert!(payload.measured_at >= before && payload.measured_at <= after);
+        assert_eq!(payload.ingested_at.timestamp_millis(), 1_700_000_000_000);
     }
 
     #[test]
