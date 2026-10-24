@@ -64,6 +64,12 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **Strict Event ID & Fallback Semantics:** Strict UUID verification on `event_id` in Pub/Sub worker, rejecting invalid IDs as Poison Pills into `telemetry_dlq` instead of generating fallback UUIDs, and explicit `Utc::now()` fallback when `measured_at_ms == 0`.
 - [x] **TimescaleDB Mega-Schema Persistence (v2.0 - Fields 22..33):** Added migration `0006_mega_schema_v2_fields.sql` and updated `persist_telemetry` to persist all 33 canonical fields into the `telemetry` hypertable.
 - [x] **HMI Diagnostics & Calibration Observability:** Displayed "Calibrando Sensores" badge during BSEC warmup (`is_calibrating`), prominent optical alerts for dirty/blocked laser optics (`is_laser_obstructed`), and network transmission latency tracking (`ingested_at - measured_at`).
+- [x] **HMI Global Navigation & SpecSheet Component (Stage 2):** Terminal-style `<SectionNav/>` with live indicator, reusable `<SpecSheet/>` for industrial instrumentation datasheets (`/hardware`, `/hpc`, `/field-research`), and compile-time footer metadata (`env!("CARGO_PKG_VERSION")`, `wasm32-unknown-unknown`).
+- [x] **High-Density Metric Readouts & Live Sparklines (Stage 2):** `<MetricReadout/>` with tabular-nums typography, sensor tolerance ranges, 60-sample in-memory historical buffers per device (`VecDeque<f64>`), and reactive SVG sparklines for live Temperature and CO2 trend curves.
+- [x] **Executive Engineering Dashboard & SVG Technical Icons (Stage 3):** Replaced all emojis with 1.5px stroke vector icons (microcontroller, optical probe, RS485 bus, mesh grid), structured executive profile with direct GitHub/LinkedIn/EcoWest links and architecture overview.
+- [x] **Hardware Systems & Block Diagrams (Stage 3):** Added `/hardware` documenting EcoWest WQM-V100 (optical DO with Sharp Memory LCD), ESP32-P4/C6 dual-chip gateway, and BME688/SCD41/BMV080 nodes with SVG block schematics.
+- [x] **AMYNTHAS-HPC Simulation Engine & MathML (Stage 3):** Added `/hpc` with native MathML ecological diffusion-advection-reaction formulation and interactive 2D discrete finite-difference simulation grid in pure Wasm/SVG.
+- [x] **Empirical Field Research & Biological Modeling (Stage 3):** Added `/field-research` connecting Colorado semi-arid soil biodiversity and oligochaete taxonomy with empirical sensor pipelines and HPC data assimilation.
 ---
 
 ## 🛠️ Local Development Environment
