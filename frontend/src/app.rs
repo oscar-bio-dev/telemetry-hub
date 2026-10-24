@@ -13,7 +13,7 @@ pub fn App() -> impl IntoView {
             <div class="container">
                 <header class="hero-header">
                     <div class="prompt-line">
-                        <span class="user">"oscar@bio-dev"</span><span class="colon">":"</span><span class="path">"~/portfolio"</span><span class="prompt">"$"</span> <span class="command">"./initialize_system"</span>
+                        <span class="user">"oscar@bio-dev"</span><span class="colon">":"</span><span class="path">"~/portfolio"</span><span class="prompt">"$"</span> <span class="command">"./initialize_system"</span><span class="cursor-blink" aria-hidden="true"></span>
                     </div>
                     <h1><A href="/" class="header-link">"Oscar Mora"</A></h1>
                     <p class="subtitle">"> Conservation Technologist & Embedded Engineer"</p>

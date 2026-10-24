@@ -31,7 +31,7 @@ pub fn Chatbot() -> impl IntoView {
         async move {
             set_is_loading.set(true);
             set_messages.update(|m| {
-                m.push(ChatMessage { sender: "User".to_string(), text: msg_clone.clone() })
+                m.push(ChatMessage { sender: "User".to_string(), text: msg_clone.clone() });
             });
 
             let req_body = ChatRequest { message: msg_clone };
@@ -57,14 +57,14 @@ pub fn Chatbot() -> impl IntoView {
                                 m.push(ChatMessage {
                                     sender: "AI".to_string(),
                                     text: chat_resp.reply,
-                                })
+                                });
                             });
                         } else {
                             set_messages.update(|m| {
                                 m.push(ChatMessage {
                                     sender: "System".to_string(),
                                     text: "Error parsing AI response.".to_string(),
-                                })
+                                });
                             });
                         }
                     } else {
@@ -72,7 +72,7 @@ pub fn Chatbot() -> impl IntoView {
                             m.push(ChatMessage {
                                 sender: "System".to_string(),
                                 text: format!("API Error: {}", resp.status()),
-                            })
+                            });
                         });
                     }
                 }
@@ -81,7 +81,7 @@ pub fn Chatbot() -> impl IntoView {
                         m.push(ChatMessage {
                             sender: "System".to_string(),
                             text: format!("Network Error: {e}"),
-                        })
+                        });
                     });
                 }
             }
@@ -91,37 +91,43 @@ pub fn Chatbot() -> impl IntoView {
     });
 
     view! {
-        <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-            <div style=move || format!("display: {}; flex-direction: column; width: 350px; height: 500px; background: var(--bg-hard); border: 2px solid var(--accent-yellow); border-radius: 8px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);", if is_open.get() { "flex" } else { "none" })>
-                <div style="background: var(--accent-yellow); color: var(--bg-hard); padding: 10px; font-weight: bold; text-align: center;">
-                    "EcoTech Assistant"
+        <aside class="chatbot-wrapper" aria-label="EcoTech Assistant">
+            <div class="chatbot-window" class:open=move || is_open.get()>
+                <div class="chatbot-header">
+                    <span>"EcoTech Assistant"</span>
                 </div>
 
-                <div style="flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: var(--bg-soft);">
+                <div class="chatbot-messages">
                     {move || messages.get().into_iter().map(|m| {
                         let is_user = m.sender == "User";
-                        let color = if is_user { "var(--accent-blue)" } else { "var(--accent-yellow)" };
-                        let align = if is_user { "flex-end" } else { "flex-start" };
+                        let is_system = m.sender == "System";
+                        let msg_class = if is_user {
+                            "chatbot-msg chatbot-msg-user"
+                        } else if is_system {
+                            "chatbot-msg chatbot-msg-system"
+                        } else {
+                            "chatbot-msg chatbot-msg-ai"
+                        };
                         view! {
-                            <div style=format!("align-self: {}; max-width: 80%;", align)>
-                                <div style=format!("font-size: 0.8em; color: {}; margin-bottom: 2px;", color)>{m.sender}</div>
-                                <div style=format!("background: var(--border-color); padding: 8px; border-radius: 4px; border-left: 3px solid {}; white-space: pre-wrap;", color)>
+                            <div class=msg_class>
+                                <span class="chatbot-sender">{m.sender}</span>
+                                <div class="chatbot-bubble">
                                     {m.text}
                                 </div>
                             </div>
                         }
                     }).collect_view()}
                     {move || if is_loading.get() {
-                        view! { <div style="color: var(--accent-blue); font-style: italic;">"EcoTech is typing..."</div> }.into_any()
+                        view! { <div class="chatbot-typing">"EcoTech is typing..."</div> }.into_any()
                     } else {
                         view! { <span></span> }.into_any()
                     }}
                 </div>
 
-                <div style="padding: 10px; border-top: 1px solid var(--border-color); background: var(--bg-hard); display: flex;">
+                <div class="chatbot-input-bar">
                     <input
                         type="text"
-                        style="flex-grow: 1; background: var(--bg-soft); color: var(--fg-main); border: 1px solid var(--border-color); padding: 8px; outline: none;"
+                        class="chatbot-input"
                         placeholder="Pregúntame sobre los sensores..."
                         prop:value=input
                         on:input=move |ev| set_input.set(event_target_value(&ev))
@@ -132,7 +138,8 @@ pub fn Chatbot() -> impl IntoView {
                         }
                     />
                     <button
-                        style="background: var(--accent-yellow); color: var(--bg-hard); border: none; padding: 0 15px; font-weight: bold; cursor: pointer;"
+                        type="button"
+                        class="chatbot-btn-send"
                         on:click=move |_| {
                             if !input.get().trim().is_empty() {
                                 send_message.dispatch(input.get());
@@ -145,11 +152,11 @@ pub fn Chatbot() -> impl IntoView {
             </div>
 
             <button
+                type="button"
+                class="chatbot-fab"
+                aria-label="Abrir asistente de IA"
                 on:click=move |_| set_is_open.update(|o| *o = !*o)
-                style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent-yellow); background-color: var(--bg-soft); background-image: url('/public/assets/img/ia-avatar.png'); background-size: cover; background-position: center; cursor: pointer; float: right; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.2s;"
-                onmouseover="this.style.transform='scale(1.1)'"
-                onmouseout="this.style.transform='scale(1)'"
             ></button>
-        </div>
+        </aside>
     }
 }

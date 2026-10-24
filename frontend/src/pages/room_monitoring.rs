@@ -192,19 +192,19 @@ pub fn RoomMonitoring() -> impl IntoView {
             <div style="margin-bottom: 2rem;">
                 {move || match conn_status.get() {
                     ConnectionStatus::Connected => view! {
-                        <div class="status-bar" style="background-color: var(--accent-green); color: var(--bg-hard);">
+                        <div class="status-bar">
                             <span>"● WS CONNECTED"</span>
                             <span>"Live Data Stream Active"</span>
                         </div>
                     }.into_any(),
                     ConnectionStatus::Connecting => view! {
-                        <div class="status-bar" style="background-color: var(--accent-yellow); color: var(--bg-hard);">
+                        <div class="status-bar status-bar-connecting">
                             <span class="pulse-text">"↻ CONNECTING..."</span>
                             <span>"Establishing Link..."</span>
                         </div>
                     }.into_any(),
                     ConnectionStatus::Disconnected => view! {
-                        <div class="status-bar" style="background-color: var(--accent-red); color: var(--fg-main);">
+                        <div class="status-bar status-bar-disconnected">
                             <span>"⨯ DISCONNECTED"</span>
                             <span>"Offline - Waiting for reconnection"</span>
                         </div>
@@ -218,11 +218,11 @@ pub fn RoomMonitoring() -> impl IntoView {
                     <div class="status-waiting">
                         <div class="spinner"></div>
                         <h3 class="pulse-text">"Esperando conexión de Gateway..."</h3>
-                        <p style="color: var(--fg-muted);">"(GCP Pub/Sub Local Emulator via WebSockets)"</p>
+                        <p>"(GCP Pub/Sub Local Emulator via WebSockets)"</p>
                     </div>
                 }
             >
-                <div class="project-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); display: grid;">
+                <div class="project-grid telemetry-grid">
                     {move || twin_state.get().values().cloned().map(|device_state| {
                         let age_ms = current_time.get() - device_state.last_updated_ms;
                         let is_stale = age_ms > 5000.0;
@@ -270,23 +270,23 @@ pub fn RoomMonitoring() -> impl IntoView {
                                         view! { <span/> }.into_any()
                                     }}
 
-                                    {payload.temperature.map(|t| view! { <p style="color: var(--accent-yellow);">"Temperature: " {format!("{:.1}", t.value())} " °C"</p> })}
-                                    {payload.humidity.map(|h| view! { <p style="color: var(--accent-blue);">"Humidity: " {format!("{:.1}", h.value())} " %"</p> })}
-                                    {payload.iaq.map(|iaq| view! { <p style="color: var(--accent-green);">"IAQ: " {format!("{:.0}", iaq.value())}</p> })}
-                                    {payload.co2.map(|c| view! { <p style="color: var(--accent-red);">"CO2: " {format!("{:.0}", c.value())} " ppm"</p> })}
-                                    {payload.eco2.map(|eco2| view! { <p style="color: var(--accent-yellow);">"eCO2 (BSEC): " {format!("{:.0}", eco2)} " ppm"</p> })}
-                                    {payload.pm2_5.map(|pm| view! { <p style="color: var(--accent-yellow);">"PM2.5: " {format!("{:.1}", pm.value())} " µg/m³"</p> })}
-                                    {payload.pm10_0.map(|pm| view! { <p style="color: var(--fg-main);">"PM10: " {format!("{:.1}", pm.value())} " µg/m³"</p> })}
-                                    {payload.pressure.map(|p| view! { <p style="color: var(--accent-yellow);">"Pressure: " {format!("{:.1}", p.value())} " hPa"</p> })}
-                                    {payload.gas_resistance.map(|g| view! { <p style="color: var(--accent-blue);">"Gas Res: " {g.value()} " Ohms"</p> })}
-                                    {payload.ph.map(|ph| view! { <p style="color: var(--accent-green);">"pH: " {format!("{:.2}", ph.value())}</p> })}
-                                    {payload.dissolved_oxygen.map(|do_val| view! { <p style="color: var(--fg-main);">"DO: " {format!("{:.2}", do_val.value())} " mg/L"</p> })}
-                                    {payload.battery_mv.map(|mv| view! { <p style="color: var(--accent-blue);">"Battery: " {mv} " mV"</p> })}
-                                    {payload.sleep_cycles.map(|sc| view! { <p style="color: var(--fg-dim);">"Sleep Cycles: " {sc}</p> })}
+                                    {payload.temperature.map(|t| view! { <p class="metric-row metric-temp">"Temperature: "<span class="metric-value">{format!("{:.1}", t.value())}</span>" °C"</p> })}
+                                    {payload.humidity.map(|h| view! { <p class="metric-row metric-humidity">"Humidity: "<span class="metric-value">{format!("{:.1}", h.value())}</span>" %"</p> })}
+                                    {payload.iaq.map(|iaq| view! { <p class="metric-row metric-iaq">"IAQ: "<span class="metric-value">{format!("{:.0}", iaq.value())}</span></p> })}
+                                    {payload.co2.map(|c| view! { <p class="metric-row metric-co2">"CO2: "<span class="metric-value">{format!("{:.0}", c.value())}</span>" ppm"</p> })}
+                                    {payload.eco2.map(|eco2| view! { <p class="metric-row metric-eco2">"eCO2 (BSEC): "<span class="metric-value">{format!("{:.0}", eco2)}</span>" ppm"</p> })}
+                                    {payload.pm2_5.map(|pm| view! { <p class="metric-row metric-pm25">"PM2.5: "<span class="metric-value">{format!("{:.1}", pm.value())}</span>" µg/m³"</p> })}
+                                    {payload.pm10_0.map(|pm| view! { <p class="metric-row metric-pm10">"PM10: "<span class="metric-value">{format!("{:.1}", pm.value())}</span>" µg/m³"</p> })}
+                                    {payload.pressure.map(|p| view! { <p class="metric-row metric-pressure">"Pressure: "<span class="metric-value">{format!("{:.1}", p.value())}</span>" hPa"</p> })}
+                                    {payload.gas_resistance.map(|g| view! { <p class="metric-row metric-gas">"Gas Res: "<span class="metric-value">{g.value()}</span>" Ohms"</p> })}
+                                    {payload.ph.map(|ph| view! { <p class="metric-row metric-ph">"pH: "<span class="metric-value">{format!("{:.2}", ph.value())}</span></p> })}
+                                    {payload.dissolved_oxygen.map(|do_val| view! { <p class="metric-row metric-do">"DO: "<span class="metric-value">{format!("{:.2}", do_val.value())}</span>" mg/L"</p> })}
+                                    {payload.battery_mv.map(|mv| view! { <p class="metric-row metric-battery">"Battery: "<span class="metric-value">{mv}</span>" mV"</p> })}
+                                    {payload.sleep_cycles.map(|sc| view! { <p class="metric-row metric-sleep">"Sleep Cycles: "<span class="metric-value">{sc}</span></p> })}
 
                                     <div class="card-footer-meta">
                                         <div class="latency-meta">
-                                            <span style="color: var(--fg-muted);">"Latencia Red: "</span>
+                                            <span class="latency-meta-label">"Latencia Red: "</span>
                                             <span class="latency-badge">{latency_display}</span>
                                         </div>
                                         <div class="data-age">
@@ -304,37 +304,37 @@ pub fn RoomMonitoring() -> impl IntoView {
                 </div>
             </Show>
 
-            <div style="margin-top: 3rem;">
-                <h3 class="section-title" style="color: var(--accent-red);">"Terminal de Alertas Críticas (DLQ)"</h3>
-                <div class="terminal-card" style="max-height: 400px; overflow-y: auto;">
-                    <div class="card-header" style="background-color: var(--accent-red); color: var(--bg-hard);">
-                        <span class="dot" style="background-color: var(--bg-hard);" aria-hidden="true"></span>
-                        <span class="dot" style="background-color: var(--bg-hard);" aria-hidden="true"></span>
-                        <span class="dot" style="background-color: var(--bg-hard);" aria-hidden="true"></span>
+            <div class="dlq-section">
+                <h3 class="section-title dlq-title">"Terminal de Alertas Críticas (DLQ)"</h3>
+                <div class="terminal-card dlq-card">
+                    <div class="card-header dlq-header">
+                        <span class="dot dlq-dot" aria-hidden="true"></span>
+                        <span class="dot dlq-dot" aria-hidden="true"></span>
+                        <span class="dot dlq-dot" aria-hidden="true"></span>
                         <span class="filename">"poison_pills.log"</span>
                     </div>
                     <div class="card-body">
                         <Show
                             when=move || !dlq_records.get().is_empty()
-                            fallback=move || view! { <p style="color: var(--accent-green);">"[OK] No hay Poison Pills recientes en la cola."</p> }
+                            fallback=move || view! { <p class="dlq-ok-msg">"[OK] No hay Poison Pills recientes en la cola."</p> }
                         >
-                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                            <table class="dlq-table">
                                 <thead>
-                                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--fg-muted);">
-                                        <th style="text-align: left; padding: 0.5rem;">"Timestamp"</th>
-                                        <th style="text-align: left; padding: 0.5rem;">"Gateway"</th>
-                                        <th style="text-align: left; padding: 0.5rem;">"Razón del Rechazo"</th>
-                                        <th style="text-align: left; padding: 0.5rem;">"Payload Base64"</th>
+                                    <tr>
+                                        <th scope="col">"Timestamp"</th>
+                                        <th scope="col">"Gateway"</th>
+                                        <th scope="col">"Razón del Rechazo"</th>
+                                        <th scope="col">"Payload Base64"</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {move || dlq_records.get().into_iter().map(|record| {
                                         view! {
-                                            <tr style="border-bottom: 1px dashed var(--bg-soft);">
-                                                <td style="padding: 0.5rem; color: var(--fg-dim);">{record.ingested_at}</td>
-                                                <td style="padding: 0.5rem; color: var(--accent-blue);">{record.gateway_id.unwrap_or_else(|| "Desconocido".to_string())}</td>
-                                                <td style="padding: 0.5rem; color: var(--accent-yellow); font-weight: bold;">{record.error_reason}</td>
-                                                <td style="padding: 0.5rem; color: var(--fg-muted); font-family: monospace; font-size: 0.8em; word-break: break-all; max-width: 200px;">
+                                            <tr class="dlq-row">
+                                                <td class="dlq-col-time">{record.ingested_at}</td>
+                                                <td class="dlq-col-gw">{record.gateway_id.unwrap_or_else(|| "Desconocido".to_string())}</td>
+                                                <td class="dlq-col-reason">{record.error_reason}</td>
+                                                <td class="dlq-col-payload">
                                                     {record.raw_payload_base64}
                                                 </td>
                                             </tr>

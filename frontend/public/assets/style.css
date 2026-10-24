@@ -9,10 +9,24 @@
     --accent-yellow: #fabd2f;
     --accent-blue: #83a598;
     --accent-red: #fb4934;
+    --accent-purple: #d3869b;
+    --accent-orange: #fe8019;
     --border-color: #504945;
-    
+
+    /* Semantic Design Tokens */
+    --status-ok: var(--accent-green);
+    --status-warn: var(--accent-yellow);
+    --status-fault: var(--accent-red);
+    --data-primary: var(--accent-blue);
+    --bio-accent: var(--accent-green);
+    --surface-instrument: var(--bg-card);
+
     --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
 body {
@@ -26,12 +40,29 @@ body {
     justify-content: center;
 }
 
+/* Console Layout (Expanded to 1320px) */
 .container {
-    max-width: 800px;
+    max-width: 1320px;
     width: 100%;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2.5rem;
+}
+
+/* Console Shell Grid (Desktop 240px nav / content) */
+.console-shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .console-shell {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 }
 
 /* Header */
@@ -44,12 +75,31 @@ body {
     font-family: var(--font-mono);
     font-size: 0.95rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
 }
 .user { color: var(--accent-green); font-weight: 600; }
 .colon { color: var(--fg-main); }
 .path { color: var(--accent-blue); font-weight: 600; }
 .prompt { color: var(--fg-main); font-weight: bold; }
 .command { color: var(--accent-yellow); margin-left: 0.5rem; }
+
+/* Blinking block cursor */
+.cursor-blink {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.15em;
+    vertical-align: -0.15em;
+    background-color: var(--accent-yellow);
+    margin-left: 0.35rem;
+    animation: blink-cursor 1s steps(2, start) infinite;
+}
+
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
 
 h1 {
     font-size: 2.8rem;
@@ -66,6 +116,11 @@ h1 {
     margin: 0;
 }
 
+.header-link {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* Terminal Card */
 .terminal-card {
     background-color: var(--bg-soft);
@@ -76,7 +131,7 @@ h1 {
 }
 
 .card-header {
-    background-color: var(--bg-card);
+    background-color: var(--surface-instrument);
     padding: 0.6rem 1rem;
     display: flex;
     align-items: center;
@@ -89,9 +144,9 @@ h1 {
     height: 12px;
     border-radius: 50%;
 }
-.red { background-color: var(--accent-red); }
-.yellow { background-color: var(--accent-yellow); }
-.green { background-color: var(--accent-green); }
+.red { background-color: var(--status-fault); }
+.yellow { background-color: var(--status-warn); }
+.green { background-color: var(--status-ok); }
 
 .filename {
     margin-left: 0.5rem;
@@ -109,7 +164,7 @@ h1 {
 .card-body p { margin-top: 0; }
 .card-body p:last-child { margin-bottom: 0; }
 
-/* Projects */
+/* Sections & Titles */
 .section-title {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
@@ -125,6 +180,7 @@ h1 {
     gap: 1rem;
 }
 
+/* Project Item with 3px solid var(--data-primary) left border and technical indentation */
 .project-item {
     display: flex;
     align-items: center;
@@ -135,18 +191,20 @@ h1 {
     text-decoration: none;
     color: inherit;
     border: 1px solid var(--border-color);
-    transition: all 0.2s ease-in-out;
+    border-left: 3px solid transparent;
+    transition: border-left-color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, padding-left 0.15s ease;
 }
 
 .project-item:hover {
-    transform: translateY(-3px);
-    border-color: var(--accent-blue);
+    border-left: 3px solid var(--data-primary);
+    border-color: var(--border-color) var(--border-color) var(--border-color) var(--data-primary);
     background-color: rgba(131, 165, 152, 0.05);
+    padding-left: 1.85rem;
 }
 
 .project-icon {
     font-size: 2.2rem;
-    background: var(--bg-card);
+    background: var(--surface-instrument);
     padding: 0.6rem;
     border-radius: 8px;
     border: 1px solid var(--border-color);
@@ -154,7 +212,7 @@ h1 {
 
 .project-info h3 {
     margin: 0 0 0.4rem 0;
-    color: var(--accent-blue);
+    color: var(--data-primary);
     font-size: 1.2rem;
     font-weight: 600;
 }
@@ -165,7 +223,40 @@ h1 {
     font-size: 0.95rem;
 }
 
-/* Footer */
+/* Tabular & Lining Numbers (Prevents digits from jumping during WebSocket updates) */
+.metric-value,
+.latency-badge,
+.specs-table th,
+.specs-table td,
+.dlq-table th,
+.dlq-table td,
+.tabular-nums {
+    font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Metric Rows in Telemetry Cards */
+.metric-row {
+    margin: 0 0 0.45rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.metric-temp { color: var(--accent-yellow); }
+.metric-humidity { color: var(--accent-blue); }
+.metric-iaq { color: var(--accent-green); }
+.metric-co2 { color: var(--accent-red); }
+.metric-eco2 { color: var(--accent-yellow); }
+.metric-pm25 { color: var(--accent-yellow); }
+.metric-pm10 { color: var(--fg-main); }
+.metric-pressure { color: var(--accent-yellow); }
+.metric-gas { color: var(--accent-blue); }
+.metric-ph { color: var(--accent-green); }
+.metric-do { color: var(--accent-purple); }
+.metric-battery { color: var(--accent-blue); }
+.metric-sleep { color: var(--fg-muted); }
+
+/* Footer & Status Bar */
 footer {
     margin-top: 2rem;
 }
@@ -173,13 +264,23 @@ footer {
 .status-bar {
     display: flex;
     justify-content: space-between;
-    background-color: var(--accent-green);
+    background-color: var(--status-ok);
     color: var(--bg-hard);
     padding: 0.6rem 1.2rem;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     font-weight: bold;
     border-radius: 4px;
+}
+
+.status-bar-connecting {
+    background-color: var(--status-warn);
+    color: var(--bg-hard);
+}
+
+.status-bar-disconnected {
+    background-color: var(--status-fault);
+    color: var(--fg-main);
 }
 
 @media (max-width: 600px) {
@@ -195,19 +296,20 @@ footer {
     }
 }
 
-.header-link {
-    text-decoration: none;
-    color: inherit;
+/* Telemetry Status & Grid */
+.telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
-/* Telemetry Status & Animations */
 .status-waiting {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 3rem;
-    color: var(--accent-yellow);
+    color: var(--status-warn);
     font-family: var(--font-mono);
     text-align: center;
     border: 1px dashed var(--border-color);
@@ -215,12 +317,16 @@ footer {
     background-color: var(--bg-soft);
 }
 
+.status-waiting p {
+    color: var(--fg-muted);
+}
+
 .spinner {
     width: 40px;
     height: 40px;
     border: 3px solid rgba(250, 189, 47, 0.3);
     border-radius: 50%;
-    border-top-color: var(--accent-yellow);
+    border-top-color: var(--status-warn);
     animation: spin 1s ease-in-out infinite;
     margin-bottom: 1rem;
 }
@@ -256,7 +362,7 @@ footer {
 
 /* Badge Calibración */
 .badge-calibrating {
-    background-color: var(--accent-yellow);
+    background-color: var(--status-warn);
     color: var(--bg-hard);
     font-size: 0.7rem;
     font-weight: 700;
@@ -273,8 +379,8 @@ footer {
 /* Alerta Lente Láser Sucia / Obstruida */
 .alert-laser-obstructed {
     background-color: rgba(251, 73, 52, 0.15);
-    border: 1px solid var(--accent-red);
-    color: var(--accent-red);
+    border: 1px solid var(--status-fault);
+    color: var(--status-fault);
     padding: 0.6rem 0.8rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -287,7 +393,7 @@ footer {
 }
 
 @keyframes pulse-border {
-    0%, 100% { border-color: var(--accent-red); }
+    0%, 100% { border-color: var(--status-fault); }
     50% { border-color: rgba(251, 73, 52, 0.4); }
 }
 
@@ -315,12 +421,315 @@ footer {
     gap: 0.35rem;
 }
 
+.latency-meta-label {
+    color: var(--fg-muted);
+}
+
 .latency-badge {
-    color: var(--accent-blue);
+    color: var(--data-primary);
     font-weight: 600;
-    background-color: var(--bg-card);
+    background-color: var(--surface-instrument);
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
     border: 1px solid var(--border-color);
 }
 
+/* DLQ Critical Alerts Terminal */
+.dlq-section {
+    margin-top: 3rem;
+}
+
+.dlq-title {
+    color: var(--status-fault);
+}
+
+.dlq-card {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.dlq-header {
+    background-color: var(--status-fault);
+    color: var(--bg-hard);
+}
+
+.dlq-dot {
+    background-color: var(--bg-hard);
+}
+
+.dlq-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.dlq-table thead tr {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--fg-muted);
+}
+
+.dlq-table th {
+    text-align: left;
+    padding: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.dlq-table td {
+    padding: 0.5rem;
+}
+
+.dlq-row {
+    border-bottom: 1px dashed var(--bg-soft);
+}
+
+.dlq-col-time {
+    color: var(--fg-muted);
+}
+
+.dlq-col-gw {
+    color: var(--data-primary);
+    font-family: var(--font-mono);
+}
+
+.dlq-col-reason {
+    color: var(--status-warn);
+    font-weight: bold;
+}
+
+.dlq-col-payload {
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    word-break: break-all;
+    max-width: 220px;
+}
+
+.dlq-ok-msg {
+    color: var(--status-ok);
+    font-family: var(--font-mono);
+}
+
+/* Chatbot Component */
+.chatbot-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.chatbot-window {
+    display: none;
+    flex-direction: column;
+    width: 360px;
+    height: 500px;
+    background: var(--bg-hard);
+    border: 2px solid var(--status-warn);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.chatbot-window.open {
+    display: flex;
+}
+
+.chatbot-header {
+    background: var(--status-warn);
+    color: var(--bg-hard);
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    text-align: center;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.chatbot-messages {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--bg-soft);
+}
+
+.chatbot-msg {
+    display: flex;
+    flex-direction: column;
+    max-width: 84%;
+}
+
+.chatbot-msg-user {
+    align-self: flex-end;
+}
+
+.chatbot-msg-user .chatbot-sender {
+    color: var(--data-primary);
+    text-align: right;
+}
+
+.chatbot-msg-user .chatbot-bubble {
+    background: var(--surface-instrument);
+    border-left: 3px solid var(--data-primary);
+    color: var(--fg-main);
+}
+
+.chatbot-msg-ai {
+    align-self: flex-start;
+}
+
+.chatbot-msg-ai .chatbot-sender {
+    color: var(--status-warn);
+    text-align: left;
+}
+
+.chatbot-msg-ai .chatbot-bubble {
+    background: var(--surface-instrument);
+    border-left: 3px solid var(--status-warn);
+    color: var(--fg-main);
+}
+
+.chatbot-msg-system {
+    align-self: center;
+    max-width: 95%;
+}
+
+.chatbot-msg-system .chatbot-bubble {
+    background: rgba(251, 73, 52, 0.15);
+    border-left: 3px solid var(--status-fault);
+    color: var(--status-fault);
+    font-size: 0.8rem;
+}
+
+.chatbot-sender {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.chatbot-bubble {
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    border: 1px solid var(--border-color);
+}
+
+.chatbot-typing {
+    color: var(--data-primary);
+    font-style: italic;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+}
+
+.chatbot-input-bar {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-hard);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chatbot-input {
+    flex-grow: 1;
+    background: var(--bg-soft);
+    color: var(--fg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.chatbot-input:focus {
+    border-color: var(--status-warn);
+}
+
+.chatbot-btn-send {
+    background: var(--status-warn);
+    color: var(--bg-hard);
+    border: none;
+    border-radius: 4px;
+    padding: 0 1rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.chatbot-btn-send:hover {
+    background: var(--accent-orange);
+}
+
+.chatbot-btn-send:active {
+    transform: scale(0.97);
+}
+
+.chatbot-fab {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--status-warn);
+    background-color: var(--bg-soft);
+    background-image: url('/public/assets/img/ia-avatar.png');
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chatbot-fab:hover {
+    transform: scale(1.1);
+    border-color: var(--accent-orange);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+}
+
+/* Accessibility: Focus Visible */
+:focus-visible {
+    outline: 2px solid var(--data-primary);
+    outline-offset: 3px;
+}
+
+/* Accessibility: Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .cursor-blink,
+    .spinner,
+    .pulse-text,
+    .alert-laser-obstructed,
+    .badge-calibrating {
+        animation: none !important;
+    }
+
+    .project-item:hover {
+        padding-left: 1.5rem;
+    }
+
+    .chatbot-fab:hover {
+        transform: none;
+    }
+}
