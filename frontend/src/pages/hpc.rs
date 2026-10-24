@@ -46,11 +46,11 @@ fn HpcGridSimulation() -> impl IntoView {
                     let up = if y > 0 { curr[(y - 1) * GRID_SIZE + x] } else { u };
                     let down = if y + 1 < GRID_SIZE { curr[(y + 1) * GRID_SIZE + x] } else { u };
 
-                    let laplacian = left + right + up + down - (4.0 * u);
+                    let laplacian = 4.0_f64.mul_add(-u, left + right + up + down);
                     let diff_term = d * laplacian;
                     let react_term = r * u * (1.0 - (u / k));
 
-                    let updated = u + dt * (diff_term + react_term);
+                    let updated = dt.mul_add(diff_term + react_term, u);
                     next[idx] = updated.clamp(0.0, 1.25);
                 }
             }
@@ -93,6 +93,7 @@ fn HpcGridSimulation() -> impl IntoView {
     };
 
     // Cálculo reactivo de métricas agregadas de la malla
+    #[allow(clippy::cast_precision_loss)]
     let metrics = move || {
         let cells = grid.get();
         let total: f64 = cells.iter().sum();

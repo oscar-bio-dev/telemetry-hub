@@ -3,7 +3,7 @@
 use leptos::*;
 
 /// Fila individual de especificación técnica para instrumentos de grado industrial.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpecRow {
     pub parameter: &'static str,
     pub value: &'static str,

@@ -6,6 +6,7 @@ use js_sys::Date;
 use leptos::*;
 use shared::TelemetryPayload;
 use std::collections::{HashMap, VecDeque};
+use std::fmt::Write;
 
 #[derive(Clone, Debug, serde::Deserialize)]
 #[allow(dead_code)]
@@ -36,11 +37,13 @@ pub enum ConnectionStatus {
 
 /// Gráfica de línea de tendencia (Sparkline en SVG de alta resolución) para métricas críticas.
 #[component]
+#[allow(clippy::cast_precision_loss)]
 pub fn SparklineCanvas(
     data: VecDeque<f64>,
     color: &'static str,
-    #[prop(optional)] _unit: Option<&'static str>,
+    #[prop(optional)] unit: Option<&'static str>,
 ) -> impl IntoView {
+    let _ = unit;
     let samples: Vec<f64> = data.into_iter().collect();
     if samples.is_empty() {
         return view! {
@@ -81,12 +84,12 @@ pub fn SparklineCanvas(
     for (i, &val) in samples.iter().enumerate() {
         let x = if n > 1 { (i as f64 / (n - 1) as f64) * width } else { width / 2.0 };
         let norm_y = (val - min_val) / range;
-        let y = height - pad_y - (norm_y * usable_h);
+        let y = norm_y.mul_add(-usable_h, height - pad_y);
 
         if i > 0 {
             points_str.push(' ');
         }
-        points_str.push_str(&format!("{x:.1},{y:.1}"));
+        let _ = write!(points_str, "{x:.1},{y:.1}");
 
         if i == n - 1 {
             last_x = x;
@@ -267,13 +270,21 @@ pub fn RoomMonitoring() -> impl IntoView {
                     if let Ok(Message::Text(text)) = msg {
                         if let Ok(payload) = serde_json::from_str::<TelemetryPayload>(&text) {
                             set_twin_state.update(|state| {
-                                let (mut temp_history, mut co2_history) = if let Some(existing) =
-                                    state.get(&payload.device_id)
-                                {
-                                    (existing.temp_history.clone(), existing.co2_history.clone())
-                                } else {
-                                    (VecDeque::with_capacity(60), VecDeque::with_capacity(60))
-                                };
+                                let (mut temp_history, mut co2_history) =
+                                    state.get(&payload.device_id).map_or_else(
+                                        || {
+                                            (
+                                                VecDeque::with_capacity(60),
+                                                VecDeque::with_capacity(60),
+                                            )
+                                        },
+                                        |existing| {
+                                            (
+                                                existing.temp_history.clone(),
+                                                existing.co2_history.clone(),
+                                            )
+                                        },
+                                    );
 
                                 if let Some(t) = payload.temperature {
                                     temp_history.push_back(t.value());
@@ -374,6 +385,7 @@ pub fn RoomMonitoring() -> impl IntoView {
                         let co2_history = device_state.co2_history;
 
                         let latency_ms = (payload.ingested_at - payload.measured_at).num_milliseconds();
+                        #[allow(clippy::cast_precision_loss)]
                         let latency_display = if latency_ms <= 0 {
                             "< 1 ms".to_string()
                         } else if latency_ms < 1000 {
