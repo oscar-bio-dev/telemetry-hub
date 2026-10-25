@@ -16,7 +16,7 @@ serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2.0"
 utoipa = "4.2"
-validator = { version = "0.19", features = ["derive"] }
+validator = { version = "0.21", features = ["derive"] }
 prost = "0.13"
 lazy_static = "1.5"
 regex = "1.10"
