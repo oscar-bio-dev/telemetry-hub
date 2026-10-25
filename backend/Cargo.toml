@@ -1,5 +1,6 @@
 [package]
 name = "backend"
+default-run = "backend"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true
