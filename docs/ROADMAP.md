@@ -70,6 +70,13 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **Hardware Systems & Block Diagrams (Stage 3):** Added `/hardware` documenting EcoWest WQM-V100 (optical DO with Sharp Memory LCD), ESP32-P4/C6 dual-chip gateway, and BME688/SCD41/BMV080 nodes with SVG block schematics.
 - [x] **AMYNTHAS-HPC Simulation Engine & MathML (Stage 3):** Added `/hpc` with native MathML ecological diffusion-advection-reaction formulation and interactive 2D discrete finite-difference simulation grid in pure Wasm/SVG.
 - [x] **Empirical Field Research & Biological Modeling (Stage 3):** Added `/field-research` connecting Colorado semi-arid soil biodiversity and oligochaete taxonomy with empirical sensor pipelines and HPC data assimilation.
+
+### 🛡️ Phase 7: Security Hardening & Zero-Trust Remediation
+- [x] **Zero-Trust Authentication & Secrets Fail-Closed (Phases 1 & 2):** Secure `/api/auth/login` with constant-time API key verification, strict fail-closed on unconfigured `JWT_SECRET`, removal of credential leaks from logs and query parameters, and prompt injection defense on cognitive digital twin.
+- [x] **HTTP Perimeter Hardening & Strict Security Headers (Phase 3):** Fail-closed CORS rejecting cross-origin requests by default unless explicitly configured, strict HTTP response security headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy), and production conditional hiding of Swagger UI.
+- [x] **Reverse-Proxy Rate Limiting & Information Leak Mitigation (Phase 3):** Integrated `SmartIpKeyExtractor` across public and cognitive endpoints, tuned burst budgets for Wasm assets, sanitized error handling without middleware leak, and defensive 4KB payload truncation on DLQ poison pills.
+- [x] **Supply Chain Deduplication & Docker/CI Hardening (Phase 4):** Clean elimination of orphaned `axum-extra` ensuring single `axum` version in dependency tree, non-root execution (`nobody` 65534:65534) in distroless Docker image, localized emulator ports, pinned SHA workflow actions, and least-privilege CI token scopes.
+
 ---
 
 ## 🛠️ Local Development Environment

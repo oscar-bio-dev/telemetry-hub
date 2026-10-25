@@ -18,7 +18,7 @@ axum = { version = "0.7", features = ["ws", "macros"] }
 # El runtime asíncrono
 tokio = { version = "1.36", features = ["full"] }
 # Para servir archivos estáticos (CSS, imágenes)
-tower-http = { version = "0.5", features = ["fs", "cors", "trace", "timeout", "limit"] }
+tower-http = { version = "0.5", features = ["fs", "cors", "trace", "timeout", "limit", "set-header"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2.0.20"
@@ -42,7 +42,6 @@ base64 = "0.23.1"
 google-cloud-auth = "1.16.0"
 uuid = { version = "1.26.0", features = ["v4"] }
 jsonwebtoken = "9"
-axum-extra = { version = "0.12.6", features = ["typed-header"] }
 serde_urlencoded = "0.7.1"
 
 [dev-dependencies]

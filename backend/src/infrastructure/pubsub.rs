@@ -244,6 +244,8 @@ async fn persist_telemetry(
     Ok(())
 }
 
+const MAX_DLQ_PAYLOAD_BYTES: usize = 4096;
+
 /// Guarda un payload inválido (Poison Pill) en la tabla DLQ.
 /// Si falla la inserción a DLQ, solo registramos error en log para no saturar Pub/Sub con NACKs por mensajes intrínsecamente malos.
 async fn handle_poison_pill(
@@ -253,6 +255,11 @@ async fn handle_poison_pill(
     event_id: Option<&str>,
 ) {
     let parsed_event_id = event_id.and_then(|id| uuid::Uuid::parse_str(id).ok());
+    let truncated_payload = if raw_payload.len() > MAX_DLQ_PAYLOAD_BYTES {
+        raw_payload[..MAX_DLQ_PAYLOAD_BYTES].to_vec()
+    } else {
+        raw_payload
+    };
 
     let result = sqlx::query(
         r"
@@ -260,7 +267,7 @@ async fn handle_poison_pill(
         VALUES ($1, $2, $3)
         ",
     )
-    .bind(raw_payload)
+    .bind(truncated_payload)
     .bind(error_reason)
     .bind(parsed_event_id)
     .execute(&state.db_pool)
@@ -276,6 +283,7 @@ async fn handle_poison_pill(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use uuid::Uuid;
 
     #[test]
@@ -290,5 +298,17 @@ mod tests {
         let invalid_str = "evt-random-string-123";
         let parsed = Uuid::parse_str(invalid_str);
         assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn test_payload_truncation_constant() {
+        assert_eq!(MAX_DLQ_PAYLOAD_BYTES, 4096);
+        let oversized = vec![0u8; 8192];
+        let truncated = if oversized.len() > MAX_DLQ_PAYLOAD_BYTES {
+            oversized[..MAX_DLQ_PAYLOAD_BYTES].to_vec()
+        } else {
+            oversized
+        };
+        assert_eq!(truncated.len(), 4096);
     }
 }

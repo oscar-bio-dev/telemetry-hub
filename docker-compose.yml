@@ -4,7 +4,7 @@ services:
     container_name: telemetry_hub_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: telemetry_hub
     ports:
       - "127.0.0.1:5432:5432"
@@ -17,7 +17,7 @@ services:
     container_name: pubsub_emulator
     command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
     ports:
-      - "0.0.0.0:8085:8085"
+      - "127.0.0.1:8085:8085"
     restart: always
 
 volumes:

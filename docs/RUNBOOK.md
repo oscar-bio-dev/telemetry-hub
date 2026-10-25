@@ -57,6 +57,10 @@ La plataforma desacopla la ingestión física mediante un suscriptor reactivo a 
                                     - Atenuación de Stale Data
 ```
 
+> [!IMPORTANT]
+> **Nota de Arquitectura de Seguridad (Terminación TLS Externa):**  
+> El binario Axum del backend opera en HTTP/1.1 plano por diseño cloud-native para optimizar el rendimiento y delegar la criptografía de capa de transporte a la infraestructura. En despliegues de producción, es **estrictamente obligatorio** utilizar un terminador TLS externo (como Google Cloud Run, Envoy, AWS ALB o Nginx Reverse Proxy) que gestione los certificados SSL/TLS y aplique cifrado HTTPS/WSS de extremo a extremo hacia los clientes.
+
 ---
 
 ## 2. Requisitos Previos y Toolchain
@@ -255,11 +259,29 @@ cargo deny check
 
 ## 9. Verificación de APIs y Operabilidad Operativa
 
-### 9.1 Health Check (Público)
+### 9.1 Health Check y Readiness Probes (Público)
+
+Verifique el estado del runtime, el pool de TimescaleDB y la conectividad con Pub/Sub:
+
 ```bash
-curl -s http://127.0.0.1:3000/api/health | jq
+# Liveness Probe (Estado general, DB y Pub/Sub)
+curl -s http://127.0.0.1:3000/health | jq
+
+# Readiness Probe (Kubelet / Cloud Run startup check)
+curl -i http://127.0.0.1:3000/ready
 ```
-*Respuesta esperada:* `{"status":"healthy","database":true,"pubsub":true}`
+
+*Respuesta esperada en `/health`:*
+```json
+{
+  "status": "healthy",
+  "database": true,
+  "pubsub": true
+}
+```
+
+*Respuesta esperada en `/ready`:*
+`HTTP/1.1 200 OK` con contenido `ready\n` (o `503 Service Unavailable` con `not ready\n` en caso de pérdida de conectividad a TimescaleDB).
 
 ### 9.2 Swagger / OpenAPI
 Abra en el navegador:

@@ -1,5 +1,5 @@
 # ── Stage 1: Builder (Frontend Wasm + Backend Musl) ──────────────────────────
-FROM rust:1.80-alpine AS builder
+FROM rust:1.85-alpine AS builder
 
 # Install build dependencies for musl static linking and OpenSSL
 RUN apk add --no-cache musl-dev pkgconfig openssl-dev perl make
@@ -44,4 +44,5 @@ ENV PORT=3000
 ENV APP_HOST=0.0.0.0
 
 WORKDIR /app/backend
+USER 65534:65534
 ENTRYPOINT ["/app/backend/server"]

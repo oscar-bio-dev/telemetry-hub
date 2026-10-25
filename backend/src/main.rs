@@ -88,14 +88,16 @@ impl Modify for SecurityAddon {
     }
 }
 
-use axum::http::Method;
+use axum::http::{header, HeaderName, HeaderValue, Method};
 use backend::domain::state::AppState;
 use std::sync::Arc;
 use std::time::Duration;
 use tower::timeout::TimeoutLayer;
+use tower_governor::key_extractor::SmartIpKeyExtractor;
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::trace::TraceLayer;
 
 use axum::{error_handling::HandleErrorLayer, BoxError};
@@ -139,11 +141,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         rx_shutdown,
     ));
 
-    // Configurar rate limiting para la API pública (ej. 2 requests por segundo, burst de 10)
+    // Configurar rate limiting para la API pública detrás de proxy/Cloud Run
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(2)
-            .burst_size(10)
+            .key_extractor(SmartIpKeyExtractor)
+            .per_millisecond(200)
+            .burst_size(30)
             .finish()
             .ok_or("Invalid governor config")?,
     );
@@ -151,32 +154,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Chat API stricter rate limiting: ~5 requests per minute
     let chat_governor_conf = Arc::new(
         GovernorConfigBuilder::default()
+            .key_extractor(SmartIpKeyExtractor)
             .per_second(12) // 1 request every 12 seconds = 5 req/min
             .burst_size(2)
             .finish()
             .ok_or("Invalid chat governor config")?,
     );
 
-    let cors_layer = std::env::var("CORS_ORIGIN").map_or_else(
-        |_| {
-            tracing::warn!(
-                "CORS_ORIGIN no configurado — permitiendo cualquier origen (solo para desarrollo)"
-            );
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods([Method::GET, Method::POST])
-                .allow_headers(Any)
-        },
-        |origin| {
-            tracing::info!("CORS restringido a origen: {}", origin);
-            CorsLayer::new()
-                .allow_origin(
-                    origin.parse::<axum::http::HeaderValue>().expect("CORS_ORIGIN inválido"),
-                )
-                .allow_methods([Method::GET, Method::POST])
-                .allow_headers(Any)
-        },
-    );
+    let cors_layer = if let Ok(origin_str) = std::env::var("CORS_ORIGIN") {
+        tracing::info!("CORS restringido a origen: {}", origin_str);
+        let origin_val = origin_str.parse::<HeaderValue>()?;
+        CorsLayer::new()
+            .allow_origin(origin_val)
+            .allow_methods([Method::GET, Method::POST])
+            .allow_headers([
+                header::AUTHORIZATION,
+                header::CONTENT_TYPE,
+                HeaderName::from_static("x-api-key"),
+            ])
+    } else {
+        tracing::info!(
+            "CORS_ORIGIN no configurado: denegando peticiones cross-origin por defecto (Fail-Closed)"
+        );
+        CorsLayer::new()
+    };
 
     let admin_protected_routes = Router::new()
         .nest("/api/dlq", backend::api::dlq::router())
@@ -185,8 +186,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             backend::api::auth::auth_middleware,
         ));
 
-    let public_app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
+    let mut public_app = Router::new()
         .route("/health", axum::routing::get(backend::api::health::liveness_probe))
         .route("/ready", axum::routing::get(backend::api::health::readiness_probe))
         .route("/api/auth/login", axum::routing::post(backend::api::auth::operator_login))
@@ -200,7 +200,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .layer(GovernorLayer { config: chat_governor_conf }),
         )
         .route("/api/ws", axum::routing::get(backend::api::ws::ws_handler))
-        .merge(admin_protected_routes)
+        .merge(admin_protected_routes);
+
+    if cfg!(debug_assertions) || std::env::var("ENABLE_SWAGGER").as_deref() == Ok("true") {
+        tracing::info!("Swagger UI habilitado en /swagger-ui");
+        public_app = public_app
+            .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()));
+    }
+
+    let public_app = public_app
         .fallback_service(
             ServeDir::new("frontend/dist")
                 .not_found_service(ServeFile::new("frontend/dist/index.html")),
@@ -209,10 +217,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             tower::ServiceBuilder::new()
                 .layer(RequestBodyLimitLayer::new(16 * 1024)) // 16 KB max payload
                 .layer(HandleErrorLayer::new(|err: BoxError| async move {
-                    (
-                        axum::http::StatusCode::REQUEST_TIMEOUT,
-                        format!("Request dropped by protection layer: {err}"),
-                    )
+                    if err.is::<tower::timeout::error::Elapsed>() {
+                        (
+                            axum::http::StatusCode::REQUEST_TIMEOUT,
+                            "Request timed out".to_string(),
+                        )
+                    } else {
+                        (
+                            axum::http::StatusCode::TOO_MANY_REQUESTS,
+                            "Too many requests or service temporarily unavailable".to_string(),
+                        )
+                    }
                 }))
                 .layer(TimeoutLayer::new(Duration::from_secs(30)))
                 .layer(GovernorLayer { config: governor_conf }),
@@ -224,6 +239,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 path = %req.uri().path(),
             )
         }))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::STRICT_TRANSPORT_SECURITY,
+            HeaderValue::from_static("max-age=63072000; includeSubDomains; preload"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::X_FRAME_OPTIONS,
+            HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::REFERRER_POLICY,
+            HeaderValue::from_static("no-referrer"),
+        ))
+        .layer(SetResponseHeaderLayer::overriding(
+            header::CONTENT_SECURITY_POLICY,
+            HeaderValue::from_static(
+                "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none';",
+            ),
+        ))
         .layer(cors_layer)
         .with_state(app_state.clone());
 
