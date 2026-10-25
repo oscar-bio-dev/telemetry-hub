@@ -20,7 +20,7 @@ serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.12", features = ["json"] }
 # Para WebSockets en Wasm
 futures = "0.3"
-gloo-net = { version = "0.3", features = ["websocket"] }
+gloo-net = { version = "0.6", features = ["websocket"] }
 tokio = { version = "1", features = ["sync", "macros"] }
 console_error_panic_hook = "0.1"
 js-sys = "0.3"
