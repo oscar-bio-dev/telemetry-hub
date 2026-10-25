@@ -18,7 +18,7 @@ axum = { version = "0.7", features = ["ws", "macros"] }
 # El runtime asíncrono
 tokio = { version = "1.36", features = ["full"] }
 # Para servir archivos estáticos (CSS, imágenes)
-tower-http = { version = "0.5", features = ["fs", "cors", "trace", "timeout", "limit", "set-header"] }
+tower-http = { version = "0.6", features = ["fs", "cors", "trace", "timeout", "limit", "set-header"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 serde = { version = "1.0.229", features = ["derive"] }
 thiserror = "2.0.20"
