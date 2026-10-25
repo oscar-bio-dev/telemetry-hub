@@ -9,6 +9,8 @@ use leptos::*;
 mod app;
 mod components;
 mod pages;
+pub mod types;
+pub mod utils;
 
 use app::App;
 

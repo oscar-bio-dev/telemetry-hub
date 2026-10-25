@@ -1016,6 +1016,7 @@ dependencies = [
  "serde_json",
  "shared",
  "tokio",
+ "web-sys",
 ]
 
 [[package]]

@@ -77,6 +77,14 @@ To ensure relentless quality and comply with industrial standards, the platform'
 - [x] **Reverse-Proxy Rate Limiting & Information Leak Mitigation (Phase 3):** Integrated `SmartIpKeyExtractor` across public and cognitive endpoints, tuned burst budgets for Wasm assets, sanitized error handling without middleware leak, and defensive 4KB payload truncation on DLQ poison pills.
 - [x] **Supply Chain Deduplication & Docker/CI Hardening (Phase 4):** Clean elimination of orphaned `axum-extra` ensuring single `axum` version in dependency tree, non-root execution (`nobody` 65534:65534) in distroless Docker image, localized emulator ports, pinned SHA workflow actions, and least-privilege CI token scopes.
 
+### ⚡ Phase 8: HMI Modernization & Granular Reactivity (Sprint 1 - P0)
+- [x] **DLQ Zero-Trust Session & Error Isolation:** P0 fix for Authorization Bearer token interpolation, `DlqFetchState` reactive state machine (`role="alert"` on failure, never falsely claiming OK), operator manual session clearing with "LOCK CONSOLE", and accessible labeled password input.
+- [x] **Granular Wasm DOM Reactivity:** Decoupled 1Hz staleness timer (`current_time`) from the node list; introduced deterministic `Memo<Vec<String>>` sorted device IDs and extracted child `<NodeCard/>`, restricting 1s timer DOM updates strictly to `class:stale-data` and text age without tearing down metric readouts or sparklines.
+- [x] **Clean WebSocket Lifecycle & Global Link Context:** Managed `ConnectionStatus` provided at `<App/>` root and reflected across the global footer and `<SectionNav/>` live indicator; implemented cancellation token (`Rc<Cell<bool>>`) in `on_cleanup` to prevent background task leaks, exponential backoff (1s-30s), and `parse_errors` reactive monitoring.
+- [x] **Industrial Health Observability:** Integrated `shared::NodeStatus` with hardware LEDs (OK/WARN/FAULT), hexadecimal bitmask inspection (`0x{:04X}`), PM sensor saturation warnings, and pure SVG technical icons replacing legacy emojis.
+- [x] **Cognitive Chatbot Hardening (HTTP 429 UX):** Refactored with `Sender` enum and `<For/>` keyed list, input lock during transmission to prevent double submissions, 12-second visual cooldown on HTTP 429 rate limit, and screen-reader accessibility (`role="log"`, `aria-live="polite"`).
+- [x] **Zero-Panic Base URL Resolvers:** Centralized API and WebSocket URL generation in `frontend/src/utils.rs` without `.expect()` on `web_sys::window()`.
+
 ---
 
 ## 🛠️ Local Development Environment

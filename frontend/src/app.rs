@@ -7,11 +7,15 @@ use crate::pages::hardware::HardwarePage;
 use crate::pages::home::Home;
 use crate::pages::hpc::HpcPage;
 use crate::pages::room_monitoring::RoomMonitoring;
+use crate::types::ConnectionStatus;
 use leptos::*;
 use leptos_router::*;
 
 #[component]
 pub fn App() -> impl IntoView {
+    let conn_status = create_rw_signal(ConnectionStatus::Disconnected);
+    provide_context(conn_status);
+
     view! {
         <Router>
             <div class="container">
@@ -54,7 +58,7 @@ pub fn App() -> impl IntoView {
 
                 <footer>
                     <div class="status-bar">
-                        <span class="status-item">"● STATUS: ONLINE"</span>
+                        <span class="status-item">{move || format!("● STATUS: {}", conn_status.get().as_str())}</span>
                         <span class="status-item">{format!("VERSION: v{}", env!("CARGO_PKG_VERSION"))}</span>
                         <span class="status-item">"TARGET: wasm32-unknown-unknown"</span>
                         <span class="status-item">"ARCH: Gruvbox SCADA HMI"</span>
