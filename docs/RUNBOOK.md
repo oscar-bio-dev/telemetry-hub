@@ -90,7 +90,7 @@ docker compose version
 
 ## 3. Configuración de Entorno (.env)
 
-Cree un archivo `.env` en la raíz del repositorio (`telemetry-hub/.env`) basándose en [.env.example](file:///run/media/ecotech/1c5134f3-88ae-49dd-8284-12d45f74828b/home/oscar/Workspaces/oscar-bio-dev/.env.example):
+Cree un archivo `.env` en la raíz del repositorio (`telemetry-hub/.env`) basándose en [.env.example](file:///run/media/ecotech/1c5134f3-88ae-49dd-8284-12d45f74828b/home/oscar/Workspaces/telemetry-hub/.env.example):
 
 ```bash
 cp .env.example .env

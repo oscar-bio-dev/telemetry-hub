@@ -1,6 +1,6 @@
 # Telemetry Hub - System Architecture & Technical Specifications
 
-This document provides in-depth technical specifications and architectural details for the **Ecological Telemetry Hub** developed by **EcoWest Instrument**.
+This document provides in-depth technical specifications and architectural details for the **Ecological Telemetry Hub** developed by **EcoWest Instrument**. For exhaustive Protocol Buffers contracts, GCP Pub/Sub message schemas, REST routes, and WebSocket specifications, consult the [API & Protocol Reference Manual](API.md).
 
 ---
 
@@ -119,7 +119,7 @@ The cloud ingestion worker follows strict reliability patterns:
 The user interface is compiled directly to WebAssembly using Rust and Leptos (CSR):
 
 - **Zero JavaScript Overhead:** Pure Rust compilation eliminates heavy node runtime dependencies.
-- **Real-Time Streaming:** Subscribes to backend WebSockets (`/api/ws/telemetry`) with exponential backoff automatic reconnection.
+- **Real-Time Streaming:** Subscribes to backend WebSockets (`/api/ws`) with exponential backoff automatic reconnection.
 - **Diagnostic Observability:**
   - Dynamic **"⏳ Calibrando Sensores"** badge rendered when `is_calibrating == true`.
   - Prominent **"⚠️ ALERTA ÓPTICA"** indicator triggered if `is_laser_obstructed == true`.
