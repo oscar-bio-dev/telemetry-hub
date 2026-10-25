@@ -96,10 +96,25 @@ pub async fn chat_with_twin(
     let safe_message = payload.message.chars().take(2000).collect::<String>();
 
     // 4. Llamar a la API de Gemini
-    let gemini_key = env::var("GEMINI_API_KEY").map_err(|_| {
-        tracing::error!("GEMINI_API_KEY no configurada en el servidor");
-        (StatusCode::INTERNAL_SERVER_ERROR, "AI not configured on server".to_string())
-    })?;
+    let gemini_key = env::var("GEMINI_API_KEY").unwrap_or_default();
+
+    if gemini_key.trim().is_empty() || gemini_key == "your_gemini_key_here" {
+        tracing::warn!(
+            "GEMINI_API_KEY no configurada o usando placeholder; respondiendo con simulación local"
+        );
+        let twin_summary = if twin_data == "{}" {
+            "No active sensor telemetry detected in the Digital Twin RAM cache yet. (Start dummy publisher to stream data)".to_string()
+        } else {
+            format!("Digital Twin real-time telemetry snapshot:\n{twin_data}")
+        };
+        let fallback_reply = format!(
+            "EcoTech Cognitive Agent [Local Simulation Mode]:\n\
+            Telemetry reasoning engine is online.\n\n\
+            {twin_summary}\n\n\
+            (Nota: Configura una clave válida en GEMINI_API_KEY en tu archivo .env para activar el razonamiento generativo completo con Google Gemini)."
+        );
+        return Ok(Json(ChatResponse { reply: fallback_reply }));
+    }
 
     let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent";
 
@@ -130,8 +145,10 @@ pub async fn chat_with_twin(
     tracing::info!("Gemini API respondió con status: {}", res.status());
 
     if !res.status().is_success() {
-        tracing::error!("Gemini API error: {}", res.status());
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "AI API returned an error".to_string()));
+        let err_status = res.status();
+        let err_body = res.text().await.unwrap_or_default();
+        tracing::error!("Gemini API error {}: {}", err_status, err_body);
+        return Err((StatusCode::BAD_GATEWAY, format!("Gemini API error ({err_status})")));
     }
 
     let gemini_resp: GeminiResponse = res.json().await.map_err(|e| {
