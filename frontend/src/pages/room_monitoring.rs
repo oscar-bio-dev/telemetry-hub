@@ -196,8 +196,8 @@ fn NodeCard(
                 format!("{latency_ms} ms")
             } else {
                 #[allow(clippy::cast_precision_loss)]
-                let latency_s = latency_ms as f64 / 1000.0;
-                format!("{latency_s:.2} s")
+                let seconds = latency_ms as f64 / 1000.0;
+                format!("{seconds:.2} s")
             }
         })
     });
@@ -241,7 +241,7 @@ fn NodeCard(
                 </div>
                 <span class="filename">
                     <span class="device-tag">"NODE_ID::"</span>
-                    <strong class="device-id">{device_id.clone()}</strong>
+                    <strong class="device-id">{device_id}</strong>
                     ".log"
                 </span>
                 {move || {
@@ -652,7 +652,7 @@ pub fn RoomMonitoring() -> impl IntoView {
     });
 
     // Worker WebSocket resiliente con backoff exponencial y cancelación limpia
-    let is_cancelled_ws = is_cancelled.clone();
+    let is_cancelled_ws = is_cancelled;
     spawn_local(async move {
         let mut backoff_secs = 1u64;
 
