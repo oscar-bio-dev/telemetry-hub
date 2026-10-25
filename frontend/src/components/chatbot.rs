@@ -25,30 +25,6 @@ pub fn Chatbot() -> impl IntoView {
     let (messages, set_messages) = create_signal(Vec::<ChatMessage>::new());
     let (input, set_input) = create_signal(String::new());
     let (is_loading, set_is_loading) = create_signal(false);
-    let (jwt_token, set_jwt_token) = create_signal(None::<String>);
-
-    // Fetch initial JWT token on mount
-    create_effect(move |_| {
-        spawn_local(async move {
-            let window = web_sys::window().expect("no global `window` exists");
-            let location = window.location();
-            let host = location.host().expect("should have a host");
-            let protocol = location.protocol().expect("should have a protocol");
-            let auth_url = if host.contains("localhost") || host.contains("127.0.0.1") {
-                "http://127.0.0.1:3000/api/auth/mock-login".to_string()
-            } else {
-                format!("{protocol}//{host}/api/auth/mock-login")
-            };
-
-            if let Ok(res) = reqwest::Client::new().post(&auth_url).send().await {
-                if let Ok(json) = res.json::<serde_json::Value>().await {
-                    if let Some(token) = json.get("token").and_then(|t| t.as_str()) {
-                        set_jwt_token.set(Some(token.to_string()));
-                    }
-                }
-            }
-        });
-    });
 
     let send_message = create_action(move |msg: &String| {
         let msg_clone = msg.clone();
@@ -70,37 +46,8 @@ pub fn Chatbot() -> impl IntoView {
                 format!("{protocol}//{host}/api/chat")
             };
 
-            // Ensure JWT token is available
-            let token = if let Some(t) = jwt_token.get_untracked() {
-                Some(t)
-            } else {
-                let auth_url = if host.contains("localhost") || host.contains("127.0.0.1") {
-                    "http://127.0.0.1:3000/api/auth/mock-login".to_string()
-                } else {
-                    format!("{protocol}//{host}/api/auth/mock-login")
-                };
-                if let Ok(res) = reqwest::Client::new().post(&auth_url).send().await {
-                    if let Ok(json) = res.json::<serde_json::Value>().await {
-                        let t =
-                            json.get("token").and_then(|tok| tok.as_str()).map(ToString::to_string);
-                        if let Some(ref tok_str) = t {
-                            set_jwt_token.set(Some(tok_str.clone()));
-                        }
-                        t
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            };
-
             let client = reqwest::Client::new();
-            let mut req = client.post(&api_url).json(&req_body);
-            if let Some(token_val) = token {
-                req = req.header("Authorization", format!("Bearer {token_val}"));
-            }
-            let res = req.send().await;
+            let res = client.post(&api_url).json(&req_body).send().await;
 
             match res {
                 Ok(resp) => {

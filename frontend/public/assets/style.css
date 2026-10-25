@@ -512,6 +512,68 @@ footer {
     font-family: var(--font-mono);
 }
 
+.dlq-locked-box {
+    padding: 1.25rem;
+    border: 1px dashed var(--status-warn);
+    background: rgba(215, 153, 33, 0.05);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.dlq-locked-msg {
+    color: var(--status-warn);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.dlq-auth-form {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.dlq-key-input {
+    flex: 1;
+    background: var(--bg-hard);
+    border: 1px solid var(--border-subtle);
+    color: var(--fg-primary);
+    font-family: var(--font-mono);
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.dlq-key-input:focus {
+    outline: none;
+    border-color: var(--data-primary);
+}
+
+.dlq-unlock-btn {
+    background: var(--bg-light);
+    border: 1px solid var(--border-subtle);
+    color: var(--fg-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.dlq-unlock-btn:hover {
+    background: var(--data-primary);
+    color: var(--bg-hard);
+}
+
+.dlq-login-error {
+    color: var(--status-danger);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
 /* Chatbot Component */
 .chatbot-wrapper {
     position: fixed;

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Oscar Mora / EcoWest Instrument. All rights reserved.
 #![warn(
     clippy::all,
     clippy::pedantic,
@@ -35,7 +36,8 @@ use utoipa_swagger_ui::SwaggerUi;
     paths(
         backend::api::digital_twin::get_digital_twin,
         backend::api::chat::chat_with_twin,
-        backend::api::dlq::get_recent_dlq
+        backend::api::dlq::get_recent_dlq,
+        backend::api::auth::operator_login
     ),
     components(
         schemas(
@@ -54,7 +56,9 @@ use utoipa_swagger_ui::SwaggerUi;
             shared::GatewayHealthEvent,
             backend::api::chat::ChatRequest,
             backend::api::chat::ChatResponse,
-            backend::api::dlq::DlqRecordDto
+            backend::api::dlq::DlqRecordDto,
+            backend::api::auth::LoginRequest,
+            backend::api::auth::LoginResponse
         )
     ),tags(
         (name = "telemetry", description = "Endpoints para sensores ambientales"),
@@ -174,17 +178,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     );
 
-    let protected_routes = Router::new()
-        .route(
-            "/api/digital-twin",
-            axum::routing::get(backend::api::digital_twin::get_digital_twin),
-        )
-        .route(
-            "/api/chat",
-            axum::routing::post(backend::api::chat::chat_with_twin)
-                .layer(GovernorLayer { config: chat_governor_conf }),
-        )
-        .route("/api/ws", axum::routing::get(backend::api::ws::ws_handler))
+    let admin_protected_routes = Router::new()
         .nest("/api/dlq", backend::api::dlq::router())
         .route_layer(axum::middleware::from_fn_with_state(
             app_state.clone(),
@@ -195,8 +189,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .route("/health", axum::routing::get(backend::api::health::liveness_probe))
         .route("/ready", axum::routing::get(backend::api::health::readiness_probe))
-        .route("/api/auth/mock-login", axum::routing::post(backend::api::auth::mock_login))
-        .merge(protected_routes)
+        .route("/api/auth/login", axum::routing::post(backend::api::auth::operator_login))
+        .route(
+            "/api/digital-twin",
+            axum::routing::get(backend::api::digital_twin::get_digital_twin),
+        )
+        .route(
+            "/api/chat",
+            axum::routing::post(backend::api::chat::chat_with_twin)
+                .layer(GovernorLayer { config: chat_governor_conf }),
+        )
+        .route("/api/ws", axum::routing::get(backend::api::ws::ws_handler))
+        .merge(admin_protected_routes)
         .fallback_service(
             ServeDir::new("frontend/dist")
                 .not_found_service(ServeFile::new("frontend/dist/index.html")),
@@ -213,7 +217,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .layer(TimeoutLayer::new(Duration::from_secs(30)))
                 .layer(GovernorLayer { config: governor_conf }),
         )
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::extract::Request| {
+            tracing::info_span!(
+                "http_request",
+                method = %req.method(),
+                path = %req.uri().path(),
+            )
+        }))
         .layer(cors_layer)
         .with_state(app_state.clone());
 

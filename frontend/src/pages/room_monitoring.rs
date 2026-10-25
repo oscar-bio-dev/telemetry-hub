@@ -171,31 +171,50 @@ pub fn RoomMonitoring() -> impl IntoView {
         });
     });
 
-    // Fetch token on mount
-    create_effect(move |_| {
-        spawn_local(async move {
+    let (operator_key, set_operator_key) = create_signal(String::new());
+    let (login_error, set_login_error) = create_signal(None::<String>);
+
+    let login_operator = create_action(move |key: &String| {
+        let key_str = key.clone();
+        async move {
+            set_login_error.set(None);
             let window = web_sys::window().expect("no global `window` exists");
             let location = window.location();
             let host = location.host().expect("should have a host");
             let protocol = location.protocol().expect("should have a protocol");
-
-            let auth_url = if host.contains("localhost") || host.contains("127.0.0.1") {
-                "http://127.0.0.1:3000/api/auth/mock-login".to_string()
+            let login_url = if host.contains("localhost") || host.contains("127.0.0.1") {
+                "http://127.0.0.1:3000/api/auth/login".to_string()
             } else {
-                format!("{protocol}//{host}/api/auth/mock-login")
+                format!("{protocol}//{host}/api/auth/login")
             };
 
-            if let Ok(res) = reqwest::Client::new().post(&auth_url).send().await {
-                if let Ok(json) = res.json::<serde_json::Value>().await {
-                    if let Some(token) = json.get("token").and_then(|t| t.as_str()) {
-                        set_jwt_token.set(Some(token.to_string()));
+            let client = reqwest::Client::new();
+            match client.post(&login_url).header("x-api-key", &key_str).send().await {
+                Ok(res) => {
+                    let status = res.status();
+                    if status.is_success() {
+                        if let Ok(json) = res.json::<serde_json::Value>().await {
+                            if let Some(token) = json.get("token").and_then(|t| t.as_str()) {
+                                set_jwt_token.set(Some(token.to_string()));
+                                set_operator_key.set(String::new());
+                            }
+                        }
+                    } else if status == reqwest::StatusCode::UNAUTHORIZED {
+                        set_login_error.set(Some(
+                            "Clave de operador no válida (401 Unauthorized)".to_string(),
+                        ));
+                    } else {
+                        set_login_error.set(Some(format!("Error de autenticación: {status}")));
                     }
                 }
+                Err(e) => {
+                    set_login_error.set(Some(format!("Error de red: {e}")));
+                }
             }
-        });
+        }
     });
 
-    // DLQ Polling (every 5 seconds)
+    // DLQ Polling (every 5 seconds, solo cuando se ha autenticado el operador)
     create_effect(move |_| {
         let handle = leptos::set_interval_with_handle(
             move || {
@@ -221,8 +240,15 @@ pub fn RoomMonitoring() -> impl IntoView {
                         .send()
                         .await
                     {
-                        if let Ok(json) = res.json::<Vec<DlqRecordDto>>().await {
-                            set_dlq_records.set(json);
+                        let status = res.status();
+                        if status.is_success() {
+                            if let Ok(json) = res.json::<Vec<DlqRecordDto>>().await {
+                                set_dlq_records.set(json);
+                            }
+                        } else if status == reqwest::StatusCode::UNAUTHORIZED
+                            || status == reqwest::StatusCode::FORBIDDEN
+                        {
+                            set_jwt_token.set(None);
                         }
                     }
                 });
@@ -241,23 +267,17 @@ pub fn RoomMonitoring() -> impl IntoView {
     create_effect(move |_| {
         retry_trigger.track();
 
-        let Some(token) = jwt_token.get() else {
-            return;
-        };
-
         let window = web_sys::window().expect("no global `window` exists");
         let location = window.location();
         let host = location.host().expect("should have a host");
         let protocol = location.protocol().expect("should have a protocol");
         let ws_protocol = if protocol == "https:" { "wss:" } else { "ws:" };
 
-        let ws_base = if host.contains("localhost") || host.contains("127.0.0.1") {
+        let ws_url = if host.contains("localhost") || host.contains("127.0.0.1") {
             "ws://127.0.0.1:3000/api/ws".to_string()
         } else {
             format!("{ws_protocol}//{host}/api/ws")
         };
-
-        let ws_url = format!("{ws_base}?token={token}");
 
         set_conn_status.set(ConnectionStatus::Connecting);
 
@@ -605,35 +625,72 @@ pub fn RoomMonitoring() -> impl IntoView {
                     </div>
                     <div class="card-body">
                         <Show
-                            when=move || !dlq_records.get().is_empty()
-                            fallback=move || view! { <p class="dlq-ok-msg">"[OK] No hay Poison Pills recientes en la cola."</p> }
-                        >
-                            <div class="spec-table-wrapper">
-                                <table class="dlq-table tabular-nums">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">"Timestamp"</th>
-                                            <th scope="col">"Gateway"</th>
-                                            <th scope="col">"Razón del Rechazo"</th>
-                                            <th scope="col">"Payload Base64"</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {move || dlq_records.get().into_iter().map(|record| {
-                                            view! {
-                                                <tr class="dlq-row">
-                                                    <td class="dlq-col-time">{record.ingested_at}</td>
-                                                    <td class="dlq-col-gw">{record.gateway_id.unwrap_or_else(|| "Desconocido".to_string())}</td>
-                                                    <td class="dlq-col-reason">{record.error_reason}</td>
-                                                    <td class="dlq-col-payload">
-                                                        {record.raw_payload_base64}
-                                                    </td>
-                                                </tr>
+                            when=move || jwt_token.get().is_some()
+                            fallback=move || view! {
+                                <div class="dlq-locked-box">
+                                    <p class="dlq-locked-msg">"[LOCKED / ZERO-TRUST] Ingrese clave de operador para inspeccionar payloads crudos de la DLQ"</p>
+                                    <div class="dlq-auth-form">
+                                        <input
+                                            type="password"
+                                            class="dlq-key-input"
+                                            placeholder="ADMIN_API_KEY..."
+                                            prop:value=operator_key
+                                            on:input=move |ev| set_operator_key.set(event_target_value(&ev))
+                                            on:keydown=move |ev| {
+                                                if ev.key() == "Enter" && !operator_key.get().trim().is_empty() {
+                                                    login_operator.dispatch(operator_key.get());
+                                                }
                                             }
-                                        }).collect_view()}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        />
+                                        <button
+                                            type="button"
+                                            class="dlq-unlock-btn"
+                                            on:click=move |_| {
+                                                if !operator_key.get().trim().is_empty() {
+                                                    login_operator.dispatch(operator_key.get());
+                                                }
+                                            }
+                                        >
+                                            "DESBLOQUEAR"
+                                        </button>
+                                    </div>
+                                    {move || login_error.get().map(|err| view! {
+                                        <p class="dlq-login-error">{err}</p>
+                                    })}
+                                </div>
+                            }
+                        >
+                            <Show
+                                when=move || !dlq_records.get().is_empty()
+                                fallback=move || view! { <p class="dlq-ok-msg">"[OK] No hay Poison Pills recientes en la cola."</p> }
+                            >
+                                <div class="spec-table-wrapper">
+                                    <table class="dlq-table tabular-nums">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">"Timestamp"</th>
+                                                <th scope="col">"Gateway"</th>
+                                                <th scope="col">"Razón del Rechazo"</th>
+                                                <th scope="col">"Payload Base64"</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {move || dlq_records.get().into_iter().map(|record| {
+                                                view! {
+                                                    <tr class="dlq-row">
+                                                        <td class="dlq-col-time">{record.ingested_at}</td>
+                                                        <td class="dlq-col-gw">{record.gateway_id.unwrap_or_else(|| "Desconocido".to_string())}</td>
+                                                        <td class="dlq-col-reason">{record.error_reason}</td>
+                                                        <td class="dlq-col-payload">
+                                                            {record.raw_payload_base64}
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }).collect_view()}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Show>
                         </Show>
                     </div>
                 </div>

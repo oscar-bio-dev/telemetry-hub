@@ -15,6 +15,11 @@ use tokio::sync::{broadcast, RwLock};
 
 use std::sync::atomic::AtomicBool;
 
+const TWIN_CAPACITY: NonZeroUsize = match NonZeroUsize::new(10_000) {
+    Some(v) => v,
+    None => panic!("Invalid capacity"),
+};
+
 /// Estado global de la aplicación inyectado en las rutas de Axum.
 #[derive(Clone)]
 pub struct AppState {
@@ -32,26 +37,55 @@ pub struct AppState {
     pub jwt_encoding_key: Arc<jsonwebtoken::EncodingKey>,
     /// Llave criptográfica para decodificar y validar JWTs
     pub jwt_decoding_key: Arc<jsonwebtoken::DecodingKey>,
+    /// Cliente HTTP reutilizable con timeout configurado
+    pub http_client: reqwest::Client,
 }
 
 impl AppState {
     /// Inicializa un nuevo estado global con el pool de base de datos inyectado.
     #[must_use]
     pub fn new(db_pool: PgPool, tx_ws: broadcast::Sender<TelemetryPayload>) -> Self {
-        let jwt_secret = std::env::var("JWT_SECRET")
-            .unwrap_or_else(|_| "secret_for_local_dev_only_change_me".to_string());
+        #[cfg(not(debug_assertions))]
+        let jwt_secret = match std::env::var("JWT_SECRET") {
+            Ok(s) if s.len() >= 32 => s,
+            _ => panic!("JWT_SECRET must be set with at least 32 bytes - refusing to start"),
+        };
+
+        #[cfg(debug_assertions)]
+        let jwt_secret = match std::env::var("JWT_SECRET") {
+            Ok(s) if s.len() >= 32 => s,
+            Ok(s) => {
+                tracing::warn!(
+                    "JWT_SECRET is shorter than 32 bytes. In dev mode, using it anyway with caution."
+                );
+                s
+            }
+            Err(_) => {
+                tracing::warn!(
+                    "JWT_SECRET is not set in dev mode. Generating ephemeral in-memory random secret."
+                );
+                uuid::Uuid::new_v4().to_string()
+            }
+        };
+
         let jwt_encoding_key =
             Arc::new(jsonwebtoken::EncodingKey::from_secret(jwt_secret.as_bytes()));
         let jwt_decoding_key =
             Arc::new(jsonwebtoken::DecodingKey::from_secret(jwt_secret.as_bytes()));
 
+        let http_client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .build()
+            .expect("Failed to build HTTP client for AppState");
+
         Self {
-            digital_twin: Arc::new(RwLock::new(LruCache::new(NonZeroUsize::new(10_000).unwrap()))),
+            digital_twin: Arc::new(RwLock::new(LruCache::new(TWIN_CAPACITY))),
             db_pool,
             tx_ws,
             pubsub_ready: Arc::new(AtomicBool::new(false)),
             jwt_encoding_key,
             jwt_decoding_key,
+            http_client,
         }
     }
 }

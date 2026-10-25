@@ -100,7 +100,8 @@ cp .env.example .env
 | `PUBSUB_EMULATOR_HOST` | `localhost:8085` | Host del emulador local de GCP Pub/Sub. |
 | `PUBSUB_SUBSCRIPTION_NAME` | `projects/oscar-bio-dev-project/subscriptions/room-telemetry-sub` | Nombre canónico de la suscripción Pub/Sub. |
 | `GEMINI_API_KEY` | *(Opcional en dev / Requerido para Chat IA)* | Llave de API para el modelo generativo del Gemelo Digital. |
-| `JWT_SECRET` | `secret_for_local_dev_only_change_me` | Clave de firma criptográfica para tokens HMAC-SHA256. |
+| `JWT_SECRET` | `<YOUR_32_BYTE_JWT_SECRET>` | Clave criptográfica para firma HMAC-SHA256 (Mínimo 32 bytes). |
+| `ADMIN_API_KEY` | `<YOUR_OPERATOR_API_KEY>` | Clave secreta para login de operador (`/api/auth/login`). |
 | `PORT` | `3000` | Puerto de escucha HTTP/WebSocket del backend. |
 | `APP_HOST` | `0.0.0.0` | Dirección de enlace del servidor Axum. |
 | `CORS_ORIGIN` | `http://localhost:8080` | Origen permitido para solicitudes web del HMI Leptos. |
@@ -266,27 +267,28 @@ Abra en el navegador:
 http://127.0.0.1:3000/swagger-ui/
 ```
 
-### 9.3 Autenticación Zero-Trust (Mock Login)
-Obtenga un token JWT de prueba:
+### 9.3 Autenticación Zero-Trust (Operator Login)
+Obtenga un token JWT de operador mediante `POST /api/auth/login` con la cabecera `x-api-key`:
 ```bash
-TOKEN=$(curl -s -X POST http://127.0.0.1:3000/api/auth/mock-login | jq -r .token)
+TOKEN=$(curl -s -X POST http://127.0.0.1:3000/api/auth/login -H "x-api-key: change_me_in_prod_operator_key" | jq -r .token)
 echo "JWT Token: $TOKEN"
 ```
 
-### 9.4 Consulta del Gemelo Digital (Protegido)
+### 9.4 Consulta del Gemelo Digital (Público con Rate-Limiting)
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:3000/api/digital-twin | jq
+curl -s http://127.0.0.1:3000/api/digital-twin | jq
 ```
 
-### 9.5 Inspección de Alertas Críticas (DLQ)
+### 9.5 Inspección de Alertas Críticas (DLQ - Protegido)
+La cola DLQ requiere autenticación de operador:
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:3000/api/dlq/recent | jq
 ```
 
-### 9.6 Conexión de Streaming WebSocket
-Conéctese utilizando `wscat` o inspeccione desde el frontend Leptos:
+### 9.6 Conexión de Streaming WebSocket (Público Read-Only)
+Conéctese utilizando `wscat` o inspeccione desde el frontend Leptos sin credenciales en la URL:
 ```bash
-wscat -c "ws://127.0.0.1:3000/api/ws?token=$TOKEN"
+wscat -c "ws://127.0.0.1:3000/api/ws"
 ```
 
 ---
